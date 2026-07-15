@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeSphere - Start</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Hanken+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface": "#0b1326",
+                        "surface-container": "#171f33",
+                        "surface-container-lowest": "#060e20",
+                        "primary": "#b7c4ff",
+                        "primary-container": "#0052ff",
+                        "on-surface": "#dae2fd",
+                        "on-surface-variant": "#c3c5d9",
+                        "brand-orange": "#FF6B00"
+                    },
+                    fontFamily: {
+                        "headline": ["Hanken Grotesk", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface min-h-screen font-body selection:bg-primary-container selection:text-white flex flex-col items-center justify-center relative overflow-hidden">
+    
+    <!-- Background Glow Effects -->
+    <div class="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary-container/20 blur-[120px] rounded-full pointer-events-none"></div>
+    <div class="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-brand-orange/20 blur-[120px] rounded-full pointer-events-none"></div>
+
+    <div class="relative z-10 flex flex-col items-center text-center max-w-3xl px-6">
+        <!-- Logo -->
+        <div class="w-16 h-16 bg-primary-container flex items-center justify-center rounded-2xl shadow-2xl shadow-primary-container/40 mb-8 animate-bounce" style="animation-duration: 3s;">
+            <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings: 'FILL' 1;">insights</span>
+        </div>
+        
+        <h1 class="font-headline text-5xl md:text-7xl font-bold tracking-tight mb-6">
+            Welcome to <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-brand-orange">TradeSphere</span>
+        </h1>
+        
+        <p class="text-on-surface-variant text-lg md:text-xl mb-12 max-w-2xl leading-relaxed">
+            The ultimate institutional-grade trading simulator. Practice strategies, access real-time market data, and master your trading psychology with zero financial risk.
+        </p>
+
+        <a href="signup.html" class="group relative px-8 py-4 bg-brand-orange text-white font-bold text-lg rounded-xl shadow-lg shadow-brand-orange/20 hover:shadow-brand-orange/40 transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden">
+            <span class="relative z-10 flex items-center gap-2">
+                Get Started Now
+                <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+            </span>
+            <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
+        </a>
+
+        <div class="mt-8">
+            <p class="text-on-surface-variant text-sm">
+                Already a member? <a href="signin.html" class="text-primary hover:underline font-medium">Log in here</a>
+            </p>
+        </div>
+    </div>
+
+</body>
+</html>

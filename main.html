@@ -1,0 +1,560 @@
+<!DOCTYPE html><html lang="en" class="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<script id="tailwind-config">try{
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-container": "#8a9ab2",
+                      "on-tertiary": "#213145",
+                      "on-surface": "#e2e2e2",
+                      "error-container": "#93000a",
+                      "on-secondary-fixed": "#1c1b1b",
+                      "on-background": "#e2e2e2",
+                      "error": "#ffb4ab",
+                      "on-error": "#690005",
+                      "surface-tint": "#ffb693",
+                      "on-surface-variant": "#e2bfb0",
+                      "on-tertiary-fixed": "#0b1c30",
+                      "inverse-primary": "#a04100",
+                      "surface-container-highest": "#333535",
+                      "surface-bright": "#38393a",
+                      "inverse-on-surface": "#2f3131",
+                      "on-secondary-container": "#bab8b7",
+                      "inverse-surface": "#e2e2e2",
+                      "secondary-fixed": "#e5e2e1",
+                      "background": "#121414",
+                      "surface-variant": "#333535",
+                      "on-tertiary-fixed-variant": "#38485d",
+                      "on-secondary": "#313030",
+                      "on-primary-fixed": "#351000",
+                      "secondary-container": "#4a4949",
+                      "surface-container-high": "#282a2b",
+                      "on-tertiary-container": "#223246",
+                      "surface-container-low": "#1a1c1c",
+                      "surface": "#121414",
+                      "surface-container": "#1e2020",
+                      "on-primary": "#561f00",
+                      "surface-dim": "#121414",
+                      "tertiary": "#b7c8e1",
+                      "on-primary-container": "#572000",
+                      "primary": "#ffb693",
+                      "on-primary-fixed-variant": "#7a3000",
+                      "on-error-container": "#ffdad6",
+                      "tertiary-fixed-dim": "#b7c8e1",
+                      "secondary": "#c8c6c5",
+                      "tertiary-fixed": "#d3e4fe",
+                      "primary-fixed-dim": "#ffb693",
+                      "outline": "#a98a7d",
+                      "outline-variant": "#5a4136",
+                      "on-secondary-fixed-variant": "#474646",
+                      "surface-container-lowest": "#0c0f0f",
+                      "secondary-fixed-dim": "#c8c6c5",
+                      "primary-container": "#ff6b00",
+                      "primary-fixed": "#ffdbcc"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "stack-md": "16px",
+                      "unit": "4px",
+                      "stack-lg": "32px",
+                      "container-padding": "24px",
+                      "stack-sm": "8px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "data-lg": ["JetBrains Mono"],
+                      "body-md": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "title-md": ["Inter"],
+                      "headline-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "data-lg": ["18px", {"lineHeight": "24px", "fontWeight": "500"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+      }catch(_e){}</script><meta charset="utf-8"></head><body class="bg-background text-on-surface font-body-md overflow-hidden">
+<!-- Sidebar Navigation Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low/90 backdrop-blur-2xl shadow-xl flex flex-col py-6 z-40">
+<div class="px-6 mb-10 flex items-center gap-3">
+<div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-fixed" style="font-variation-settings: 'FILL' 1;">insights</span>
+</div>
+<div>
+<h1 class="font-headline-lg text-primary font-bold text-xl leading-none">TradeOsphere</h1>
+<p class="font-label-sm text-on-surface-variant text-[10px] tracking-widest uppercase mt-1">Pro Trader</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a href="#" class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg p-3 mx-2 transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-sm text-label-sm">Dashboard</span>
+</a>
+<a href="#" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-label-sm text-label-sm">Watchlist</span>
+</a>
+<a href="#" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
+<span class="material-symbols-outlined">pie_chart</span>
+<span class="font-label-sm text-label-sm">Portfolio</span>
+</a>
+<a href="#" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-sm text-label-sm">Orders</span>
+</a>
+<a href="#" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="font-label-sm text-label-sm">Analytics</span>
+</a>
+<a href="#" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-4">
+<button class="w-full bg-primary-container text-on-primary-container font-bold py-3 rounded-xl mb-6 shadow-lg shadow-primary-container/20 hover:scale-[1.02] active:scale-[0.98] transition-transform">
+                Trade Now
+            </button>
+<div class="space-y-1">
+<a href="#" class="flex items-center gap-3 text-on-surface-variant p-3 hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">headset_mic</span>
+<span class="font-label-sm text-label-sm">Support</span>
+</a>
+<a href="#" id="logout-btn" class="flex items-center gap-3 text-on-surface-variant p-3 hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-sm text-label-sm">Log Out</span>
+</a>
+</div>
+<div class="mt-6 pt-6 border-t border-outline-variant/10 space-y-3 pb-4">
+    <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Developer</p>
+    <div class="space-y-2">
+        <div class="flex items-center gap-2 text-on-surface-variant">
+            <span class="material-symbols-outlined text-sm">person</span>
+            <span class="text-[11px] font-medium">Saksham Jha</span>
+        </div>
+        <a href="https://github.com/SAKSHAM-JHA007" target="_blank" class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">code</span>
+            <span class="text-[11px] font-label-sm">GitHub: SAKSHAM-JHA007</span>
+        </a>
+        <a href="https://leetcode.com/SAKSHAM-JHA007" target="_blank" class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">terminal</span>
+            <span class="text-[11px] font-label-sm">LeetCode: SAKSHAM-JHA007</span>
+        </a>
+    </div>
+</div></div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="w-full h-16 sticky top-0 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/20 shadow-sm flex justify-between items-center px-gutter z-50">
+<div class="flex items-center gap-4 flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-[20px] -translate-y-1/2 text-on-surface-variant">search</span>
+<input id="stock-search" type="text" placeholder="Search stock ticker (e.g. AAPL)... Press Enter" class="w-full bg-surface-container-low border border-outline-variant/20 rounded-full py-2 pl-10 pr-4 text-body-md focus:outline-none focus:border-primary/50 transition-all">
+<div id="stock-result-container" class="absolute top-full left-0 mt-2 w-full bg-surface-container-high rounded-xl border border-outline-variant/20 shadow-xl hidden z-50 p-4"></div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-on-surface-variant font-label-sm text-[11px] uppercase tracking-wider">Market Open</span>
+</div>
+<div class="flex gap-1">
+<button class="p-2 text-on-surface-variant hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant/20 mx-2"></div>
+<div class="flex items-center gap-3 cursor-pointer hover:bg-surface-variant/30 p-1 pr-3 rounded-full transition-colors">
+<img class="w-8 h-8 rounded-full border border-primary/30 object-cover" data-alt="A professional headshot of a financial trader, sharp features, wearing a modern dark charcoal suit, standing against a high-tech minimalist office background with soft bokeh lights and a subtle digital overlay. The lighting is sophisticated, with blue and orange rim lights, creating a high-end fintech executive atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAu3z8TwmtwxhCVccaFuW13OioXIzQhBv8jnXIMLuoxG8oS8jSyT22IGjdCl9syQ4YW0kx2PWJ4GU4BdCQQlZPhWoHzcaU5pAZDXZpSNKSOavJ9GKPURw1ecW0EDQ5LFPlLb1pJxZBhENsO799jfIizHmuZgIcliAkS2hsAOpZpyjJrd0BG19ojkIBd-Rd_qGv_jKBrpFyHpXt6Y4ualgbdXQul-3lC5CDwMMXwcdACP2GCddIw0PcxFpcK4YqdWh-c2R0_3KVOjPCG">
+<span id="user-name-display" class="font-label-sm text-on-surface font-semibold">Loading...</span>
+</div>
+</div>
+</header>
+<!-- Dashboard Content Grid -->
+<div class="p-container-padding grid grid-cols-12 gap-gutter flex-1 overflow-y-auto">
+<!-- Left/Main Column -->
+<div class="col-span-8 flex flex-col gap-gutter">
+<!-- Portfolio Summary Card -->
+<section class="glass-surface p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between h-64 orange-glow">
+
+<div class="relative z-10">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-on-surface-variant font-label-sm mb-1 uppercase tracking-widest">Total Portfolio Value</p>
+<h2 id="total-portfolio-value" class="text-primary font-display-lg text-4xl mb-4">₹Loading...</h2>
+</div>
+<div class="text-right">
+<p class="text-on-surface-variant font-label-sm mb-1 uppercase tracking-widest">Today's P&amp;L</p>
+<div id="todays-pl" class="flex items-center justify-end gap-2 text-primary font-semibold text-xl">--</div>
+</div>
+</div>
+</div>
+<div class="relative z-10 flex items-end justify-between">
+<div class="flex gap-10">
+<div>
+<p class="text-on-surface-variant font-label-sm mb-1 uppercase tracking-widest">Available Cash</p>
+<p id="available-cash" class="font-data-lg text-on-surface">₹Loading...</p>
+</div>
+<div>
+<p class="text-on-surface-variant font-label-sm mb-1 uppercase tracking-widest">Overall P&amp;L</p>
+<p id="overall-pl" class="font-data-lg text-on-surface">--</p>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="bg-surface-variant/50 border border-outline-variant/30 text-on-surface px-6 py-2.5 rounded-xl font-semibold hover:bg-surface-variant transition-colors">
+                                Portfolio Analytics
+                            </button>
+<button class="bg-primary-container text-on-primary-fixed px-8 py-2.5 rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                                Invest More
+                            </button>
+</div>
+</div>
+</section>
+<!-- Market Pulse Chart -->
+<section class="glass-surface p-6 rounded-3xl">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h3 class="font-title-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">analytics</span>
+                                Market Pulse: NIFTY 50 Trends
+                            </h3>
+<p class="text-on-surface-variant font-label-sm">Visualizing intraday sentiment and momentum</p>
+</div>
+<div class="flex bg-surface-container-low p-1 rounded-lg border border-outline-variant/10">
+<button class="px-3 py-1 rounded text-xs font-bold bg-primary-container text-on-primary-fixed">1D</button>
+<button class="px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface">1W</button>
+<button class="px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface">1M</button>
+<button class="px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface">1Y</button>
+</div>
+</div>
+<div id="chart-container" class="h-64 w-full relative">
+    <!-- Chart will be rendered here by LightweightCharts -->
+    <div class="absolute inset-0 flex items-center justify-center text-on-surface-variant">Select a stock to view chart</div>
+</div>
+</section>
+<!-- Trending Stocks Table -->
+<section class="glass-surface rounded-3xl overflow-hidden">
+<div class="p-6 border-b border-outline-variant/10 flex justify-between items-center">
+<h3 class="font-title-md text-on-surface">Trending Stocks</h3>
+<button class="text-primary font-label-sm hover:underline">View All Market</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low/50">
+<tr class="text-on-surface-variant font-label-sm text-[11px] uppercase tracking-wider">
+<th class="px-6 py-4">Symbol</th>
+<th class="px-6 py-4">Price</th>
+<th class="px-6 py-4">24h Change</th>
+<th class="px-6 py-4">Market Cap</th>
+<th class="px-6 py-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody id="watchlist-body" class="divide-y divide-outline-variant/10">
+<!-- Dynamic Rows Injected via WebSockets -->
+</tbody>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+<!-- Portfolio Allocation -->
+<section class="glass-surface p-6 rounded-3xl">
+<h3 class="font-title-md text-on-surface mb-6">Portfolio Allocation</h3>
+<div id="allocation-container" class="space-y-3">
+    <div class="text-sm text-on-surface-variant text-center">Loading allocation...</div>
+</div>
+</section>
+<!-- Market Overview & Top Movers -->
+<section class="glass-surface p-6 rounded-3xl flex-1 flex flex-col gap-6">
+    <div>
+        <h3 class="font-title-md text-on-surface mb-4 text-sm uppercase tracking-widest">Market Overview</h3>
+        <div id="market-overview" class="space-y-3"></div>
+    </div>
+    <div class="w-full h-px bg-outline-variant/20"></div>
+    <div>
+        <h3 class="font-title-md text-on-surface mb-4 text-sm uppercase tracking-widest text-primary">Top Gainers</h3>
+        <div id="top-gainers" class="space-y-3"></div>
+    </div>
+    <div>
+        <h3 class="font-title-md text-error mb-4 text-sm uppercase tracking-widest mt-4">Top Losers</h3>
+        <div id="top-losers" class="space-y-3"></div>
+    </div>
+</section>
+<!-- Market News -->
+<section class="glass-surface p-6 rounded-3xl">
+<h3 class="font-title-md text-on-surface mb-4">Market News</h3>
+<div class="space-y-4">
+<div class="group cursor-pointer">
+<p class="text-on-surface group-hover:text-primary transition-colors text-xs font-semibold leading-tight mb-1">RBI likely to maintain status quo on repo rates for the 4th consecutive meet.</p>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-wider">12 mins ago • Finance Express</span>
+</div>
+<div class="w-full h-[1px] bg-outline-variant/10"></div>
+<div class="group cursor-pointer">
+<p class="text-on-surface group-hover:text-primary transition-colors text-xs font-semibold leading-tight mb-1">Tech stocks rally as quarterly earnings exceed analyst expectations.</p>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-wider">45 mins ago • Bloomberg</span>
+</div>
+<div class="w-full h-[1px] bg-outline-variant/10"></div>
+<div class="group cursor-pointer">
+<p class="text-on-surface group-hover:text-primary transition-colors text-xs font-semibold leading-tight mb-1">Crude oil prices stabilize at $85/barrel amid Middle East tensions.</p>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-wider">2 hours ago • Reuters</span>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<script>
+        // Store user balance globally
+        let currentUserBalance = 0;
+
+        // Fetch Session
+        async function fetchSession() {
+            try {
+                const res = await fetch('/api/session');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.user) {
+                        document.getElementById('user-name-display').textContent = data.user.name;
+                        currentUserBalance = data.user.balance;
+                        document.getElementById('virtual-balance').textContent = `₹${data.user.balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    }
+                } else {
+                    window.location.href = '/start.html';
+                }
+            } catch (e) {
+                console.error('Session check failed', e);
+            }
+        }
+
+        // Fetch Dashboard Stats
+        async function fetchDashboard() {
+            try {
+                const res = await fetch('/api/portfolio');
+                if (res.ok) {
+                    const data = await res.json();
+                    
+                    document.getElementById('total-portfolio-value').textContent = `₹${data.totalPortfolioValue.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    document.getElementById('available-cash').textContent = `₹${data.availableCash.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    
+                    const todaysPL = document.getElementById('todays-pl');
+                    todaysPL.textContent = `${data.todaysProfitLoss >= 0 ? '+' : ''}₹${data.todaysProfitLoss.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    todaysPL.className = `flex items-center justify-end gap-2 font-semibold text-xl ${data.todaysProfitLoss >= 0 ? 'text-primary' : 'text-error'}`;
+                    
+                    const overallPL = document.getElementById('overall-pl');
+                    overallPL.textContent = `${data.overallProfitLoss >= 0 ? '+' : ''}₹${data.overallProfitLoss.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    overallPL.className = `font-data-lg ${data.overallProfitLoss >= 0 ? 'text-primary' : 'text-error'}`;
+
+                    // Update Allocation
+                    const allocationBox = document.getElementById('allocation-container');
+                    if (data.holdings.length === 0) {
+                        allocationBox.innerHTML = `<div class="text-sm text-on-surface-variant text-center">No investments yet.</div>`;
+                    } else {
+                        allocationBox.innerHTML = data.holdings.map(h => {
+                            const percent = ((h.totalValue / data.totalInvested) * 100).toFixed(1);
+                            return `
+                            <div class="flex justify-between items-center text-sm bg-surface-container-low p-2 rounded">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-on-surface font-bold">${h.ticker.replace('.NS', '')}</span>
+                                </div>
+                                <span class="font-data-lg">${percent}%</span>
+                            </div>`;
+                        }).join('');
+                    }
+                }
+            } catch(e) {
+                console.error("Dashboard fetch error", e);
+            }
+        }
+        
+        fetchSession();
+        fetchDashboard();
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/start.html';
+        });
+
+        // Initialize Lightweight Chart
+        const chartContainer = document.getElementById('chart-container');
+        const chart = LightweightCharts.createChart(chartContainer, {
+            width: chartContainer.clientWidth,
+            height: chartContainer.clientHeight,
+            layout: {
+                backgroundColor: 'transparent',
+                textColor: '#c3c5d9',
+            },
+            grid: {
+                vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
+                horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
+            },
+            timeScale: {
+                borderColor: 'rgba(255, 255, 255, 0.1)'
+            }
+        });
+        const lineSeries = chart.addLineSeries({
+            color: '#b7c4ff',
+            lineWidth: 2,
+        });
+
+        // Search bar functionality
+        const searchInput = document.getElementById('stock-search');
+        const resultContainer = document.getElementById('stock-result-container');
+
+        searchInput.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                const ticker = searchInput.value.trim().toUpperCase();
+                // Append .NS if missing
+                const formattedTicker = ticker.includes('.') ? ticker : `${ticker}.NS`;
+                if (!formattedTicker) return;
+                
+                // Show chart data
+                try {
+                    const res = await fetch(`/api/stock/history/${formattedTicker}`);
+                    const data = await res.json();
+                    if (res.ok && data.length > 0) {
+                        // Clear placeholder and show chart
+                        chartContainer.innerHTML = '';
+                        chartContainer.appendChild(chart.chartElement());
+                        lineSeries.setData(data);
+                        chart.timeScale().fitContent();
+                    }
+                } catch (e) {
+                    console.error("Failed to load chart", e);
+                }
+
+                // Show trade panel in search dropdown
+                resultContainer.innerHTML = `
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="font-bold text-lg text-on-surface">${formattedTicker}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <input id="trade-qty" type="number" min="1" value="1" class="w-20 bg-surface-container border border-outline-variant/30 rounded px-2 text-on-surface" />
+                        <button onclick="executeTrade('${formattedTicker}', 'BUY')" class="bg-secondary text-on-secondary px-4 py-1 rounded font-bold hover:brightness-110 flex-1">BUY</button>
+                        <button onclick="executeTrade('${formattedTicker}', 'SELL')" class="bg-error text-on-error px-4 py-1 rounded font-bold hover:brightness-110 flex-1">SELL</button>
+                    </div>
+                    <div id="trade-msg" class="mt-2 text-xs font-semibold"></div>
+                `;
+                resultContainer.classList.remove('hidden');
+            }
+        });
+
+        // Trade Execution
+        async function executeTrade(ticker, type) {
+            const qty = document.getElementById('trade-qty').value;
+            const msgBox = document.getElementById('trade-msg');
+            msgBox.textContent = "Executing...";
+            
+            try {
+                const res = await fetch('/api/trade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ticker, type, quantity: qty })
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    msgBox.className = "mt-2 text-xs font-semibold text-primary";
+                    msgBox.textContent = `Success: ${type} ${qty} ${ticker} @ ₹${data.price.toFixed(2)}`;
+                    fetchDashboard(); // Update dashboard
+                } else {
+                    msgBox.className = "mt-2 text-xs font-semibold text-error";
+                    msgBox.textContent = `Failed: ${data.error}`;
+                }
+            } catch (e) {
+                msgBox.className = "mt-2 text-xs font-semibold text-error";
+                msgBox.textContent = "Network Error";
+            }
+        }
+
+        // WebSockets for Real-Time Watchlist & Movers
+        const socket = io();
+        const watchlistBody = document.getElementById('watchlist-body');
+        const overviewBox = document.getElementById('market-overview');
+        const gainersBox = document.getElementById('top-gainers');
+        const losersBox = document.getElementById('top-losers');
+        
+        socket.on('marketUpdate', (data) => {
+            const indices = data.filter(d => d.symbol.startsWith('^'));
+            const stocks = data.filter(d => !d.symbol.startsWith('^'));
+            
+            // Overview
+            overviewBox.innerHTML = indices.map(idx => `
+                <div class="flex justify-between text-sm bg-surface-container-lowest p-2 rounded">
+                    <span class="font-bold">${idx.symbol === '^NSEI' ? 'NIFTY 50' : 'SENSEX'}</span>
+                    <span class="${idx.change > 0 ? 'text-primary' : 'text-error'} font-data-lg">${idx.price?.toFixed(2)} (${idx.changePercent?.toFixed(2)}%)</span>
+                </div>
+            `).join('');
+
+            // Watchlist table
+            watchlistBody.innerHTML = stocks.map(stock => {
+                const isPositive = stock.change > 0;
+                const color = isPositive ? 'text-primary' : 'text-error';
+                return `
+                    <tr class="hover:bg-surface-variant/20 transition-colors group cursor-pointer" onclick="searchInput.value='${stock.symbol}'; searchInput.dispatchEvent(new KeyboardEvent('keypress', {'key':'Enter'}))">
+                        <td class="px-6 py-4 font-semibold text-on-surface">${stock.symbol.replace('.NS', '')}</td>
+                        <td class="px-6 py-4 font-data-lg text-sm text-on-surface">₹${stock.price?.toFixed(2) || 'N/A'}</td>
+                        <td class="px-6 py-4 font-semibold ${color}">
+                            ${isPositive ? '+' : ''}${stock.changePercent?.toFixed(2) || '0'}%
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <span class="material-symbols-outlined text-sm text-on-surface-variant group-hover:text-primary transition-colors">show_chart</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Top Gainers / Losers
+            const sorted = [...stocks].sort((a,b) => b.changePercent - a.changePercent);
+            const gainers = sorted.slice(0, 3).filter(s => s.changePercent > 0);
+            const losers = [...sorted].reverse().slice(0, 3).filter(s => s.changePercent < 0);
+
+            gainersBox.innerHTML = gainers.map(s => `
+                <div class="flex justify-between text-sm">
+                    <span class="font-bold">${s.symbol.replace('.NS', '')}</span>
+                    <span class="text-primary font-bold">+${s.changePercent?.toFixed(2)}%</span>
+                </div>
+            `).join('') || '<div class="text-xs text-on-surface-variant">No gainers currently</div>';
+
+            losersBox.innerHTML = losers.map(s => `
+                <div class="flex justify-between text-sm">
+                    <span class="font-bold">${s.symbol.replace('.NS', '')}</span>
+                    <span class="text-error font-bold">${s.changePercent?.toFixed(2)}%</span>
+                </div>
+            `).join('') || '<div class="text-xs text-on-surface-variant">No losers currently</div>';
+        });
+
+        // Handle clicks outside dropdown to close it
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !resultContainer.contains(e.target)) {
+                resultContainer.classList.add('hidden');
+            }
+        });
+    </script>
+
+</body></html>
