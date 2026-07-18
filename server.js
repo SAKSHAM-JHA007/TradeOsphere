@@ -7,6 +7,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const http = require('http');
 const { Server } = require('socket.io');
+const FINNHUB_API_KEY = 'd9dkkl1r01qui7p2j8vgd9dkkl1r01qui7p2j900';
 const YahooFinance = require('yahoo-finance2').default;
 const yahooFinance = new YahooFinance();
 const cron = require('node-cron');
@@ -141,7 +142,13 @@ app.get('/api/portfolio', requireAuth, (req, res) => {
             const tickers = rows.map(r => r.ticker);
             let quotes = [];
             if (tickers.length > 0) {
-                quotes = await Promise.all(tickers.map(t => yahooFinance.quote(t).catch(() => null)));
+                quotes = await Promise.all(tickers.map(async t => {
+                    try {
+                        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${FINNHUB_API_KEY}`);
+                        const data = await res.json();
+                        return { symbol: t, regularMarketPrice: data.c, regularMarketPreviousClose: data.pc, regularMarketChangePercent: data.dp };
+                    } catch(e) { return null; }
+                }));
             }
             const quoteMap = quotes.filter(q => q).reduce((acc, q) => ({ ...acc, [q.symbol]: q }), {});
             
@@ -200,11 +207,11 @@ app.post('/api/trade', requireAuth, async (req, res) => {
     }
 
     try {
-        // Fetch real-time price via Yahoo Finance to execute the trade
-        const quote = await yahooFinance.quote(ticker);
-        if (!quote || !quote.regularMarketPrice) return res.status(400).json({ error: 'Invalid ticker symbol' });
+        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
+        const quote = await res.json();
+        if (!quote || !quote.c || quote.c === 0) return res.status(400).json({ error: 'Invalid ticker symbol or no price data' });
         
-        const price = quote.regularMarketPrice;
+        const price = quote.c;
         const totalValue = price * qty;
 
         db.serialize(() => {
@@ -253,33 +260,115 @@ app.post('/api/trade', requireAuth, async (req, res) => {
     }
 });
 
-app.get('/api/stock/history/:ticker', requireAuth, async (req, res) => {
+app.get('/api/stock/search/:query', requireAuth, async (req, res) => {
     try {
-        const { ticker } = req.params;
-        // Get last 1 month of daily data for charting
-        const result = await yahooFinance.historical(ticker, { period1: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1d' });
-        const chartData = result.map(day => ({
-            time: day.date.toISOString().split('T')[0],
-            value: day.close
-        }));
+        const fetchRes = await fetch(`https://finnhub.io/api/v1/search?q=${req.params.query}&token=${FINNHUB_API_KEY}`);
+        const result = await fetchRes.json();
+        // Map to expected frontend structure
+        res.json({ quotes: result.result.map(r => ({ symbol: r.displaySymbol, longname: r.description, quoteType: 'EQUITY' })) });
+    } catch (err) {
+        res.status(500).json({ error: 'Error searching' });
+    }
+});
+
+app.get('/api/stock/quote/:ticker', requireAuth, async (req, res) => {
+    try {
+        const ticker = req.params.ticker;
+        const [quoteRes, profileRes] = await Promise.all([
+            fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`).then(r => r.json()),
+            fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${FINNHUB_API_KEY}`).then(r => r.json())
+        ]);
+        
+        const mappedQuote = {
+            symbol: ticker,
+            regularMarketPrice: quoteRes.c,
+            regularMarketChange: quoteRes.d,
+            regularMarketChangePercent: quoteRes.dp,
+            regularMarketOpen: quoteRes.o,
+            regularMarketDayHigh: quoteRes.h,
+            regularMarketDayLow: quoteRes.l,
+            regularMarketPreviousClose: quoteRes.pc,
+            longName: profileRes.name || ticker,
+            sector: profileRes.finnhubIndustry || 'Equities',
+            marketCap: profileRes.marketCapitalization ? profileRes.marketCapitalization * 1000000 : null,
+            regularMarketVolume: null // Finnhub quote doesn't return volume in standard tier easily, keep null
+        };
+        res.json(mappedQuote);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching quote' });
+    }
+});
+
+app.get('/api/stock/history/:ticker/:range', requireAuth, async (req, res) => {
+    try {
+        const { ticker, range } = req.params;
+        let period1, interval;
+        const now = new Date();
+        
+        if (range === '1D') {
+            period1 = new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000);
+            interval = '5m';
+        } else if (range === '5D') {
+            period1 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            interval = '15m';
+        } else if (range === '1M') {
+            period1 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            interval = '1d';
+        } else if (range === '3M') {
+            period1 = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+            interval = '1d';
+        } else if (range === '6M') {
+            period1 = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+            interval = '1d';
+        } else if (range === '1Y') {
+            period1 = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+            interval = '1d';
+        } else if (range === '5Y') {
+            period1 = new Date(now.getTime() - 5 * 365 * 24 * 60 * 60 * 1000);
+            interval = '1wk';
+        } else {
+            period1 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            interval = '1d';
+        }
+
+        const result = await yahooFinance.chart(ticker, { period1, interval });
+        
+        if (!result.quotes || result.quotes.length === 0) return res.json([]);
+        
+        const chartData = result.quotes.map(q => ({
+            time: interval.endsWith('m') ? Math.floor(new Date(q.date).getTime() / 1000) : new Date(q.date).toISOString().split('T')[0],
+            open: q.open,
+            high: q.high,
+            low: q.low,
+            close: q.close,
+            value: q.close
+        })).filter(q => q.close !== null);
+        
         res.json(chartData);
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: 'Error fetching historical data' });
     }
 });
 
-// Periodic Yahoo Finance fetching and WebSocket broadcasting
-const WATCHLIST = ['RELIANCE.NS', 'TCS.NS', 'HDFCBANK.NS', 'INFY.NS', 'SBIN.NS', 'ICICIBANK.NS', 'ITC.NS', '^NSEI', '^BSESN'];
+// Periodic Finnhub fetching and WebSocket broadcasting
+const WATCHLIST = ['AAPL', 'MSFT', 'TSLA', 'GOOGL', 'AMZN', 'NVDA', 'META', 'SPY', 'QQQ'];
 
 cron.schedule('*/10 * * * * *', async () => {
     try {
-        const quotes = await Promise.all(WATCHLIST.map(ticker => yahooFinance.quote(ticker)));
-        const marketData = quotes.map(q => ({
-            symbol: q.symbol,
-            price: q.regularMarketPrice,
-            change: q.regularMarketChange,
-            changePercent: q.regularMarketChangePercent
+        const quotes = await Promise.all(WATCHLIST.map(async ticker => {
+            try {
+                const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
+                const data = await res.json();
+                return {
+                    symbol: ticker,
+                    price: data.c,
+                    change: data.d,
+                    changePercent: data.dp
+                };
+            } catch(e) { return null; }
         }));
+        const marketData = quotes.filter(q => q && q.price !== 0);
         io.emit('marketUpdate', marketData);
     } catch (err) {
         console.error('Error fetching market updates', err);
@@ -302,7 +391,7 @@ app.get('/main.html', (req, res, next) => {
     });
 });
 
-app.use(express.static(path.join(__dirname, '')));
+app.use(express.static(path.join(__dirname, ''), { etag: false, maxAge: 0 }));
 
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

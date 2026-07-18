@@ -1,6 +1,7 @@
 <!DOCTYPE html><html lang="en" class="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script id="tailwind-config">try{
         tailwind.config = {
           darkMode: "class",
@@ -107,33 +108,33 @@
 <span class="material-symbols-outlined">dashboard</span>
 <span class="font-label-sm text-label-sm">Dashboard</span>
 </a>
-<a href="#" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
+<a href="#" onclick="showToast('Watchlist feature coming soon!')" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
 <span class="material-symbols-outlined">list_alt</span>
 <span class="font-label-sm text-label-sm">Watchlist</span>
 </a>
-<a href="#" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
+<a href="#" onclick="showToast('Portfolio view coming soon!')" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
 <span class="material-symbols-outlined">pie_chart</span>
 <span class="font-label-sm text-label-sm">Portfolio</span>
 </a>
-<a href="#" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
+<a href="#" onclick="showToast('Orders history coming soon!')" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
 <span class="material-symbols-outlined">receipt_long</span>
 <span class="font-label-sm text-label-sm">Orders</span>
 </a>
-<a href="#" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
+<a href="#" onclick="showToast('Analytics dashboard coming soon!')" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
 <span class="material-symbols-outlined">leaderboard</span>
 <span class="font-label-sm text-label-sm">Analytics</span>
 </a>
-<a href="#" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
+<a href="#" onclick="showToast('Settings page coming soon!')" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
 <span class="material-symbols-outlined">settings</span>
 <span class="font-label-sm text-label-sm">Settings</span>
 </a>
 </nav>
 <div class="mt-auto px-4">
-<button class="w-full bg-primary-container text-on-primary-container font-bold py-3 rounded-xl mb-6 shadow-lg shadow-primary-container/20 hover:scale-[1.02] active:scale-[0.98] transition-transform">
+<button onclick="showToast('Quick Trade modal coming soon!')" class="w-full bg-primary-container text-on-primary-container font-bold py-3 rounded-xl mb-6 shadow-lg shadow-primary-container/20 hover:scale-[1.02] active:scale-[0.98] transition-transform">
                 Trade Now
             </button>
 <div class="space-y-1">
-<a href="#" class="flex items-center gap-3 text-on-surface-variant p-3 hover:text-on-surface transition-colors">
+<a href="#" onclick="showToast('Support portal coming soon!')" class="flex items-center gap-3 text-on-surface-variant p-3 hover:text-on-surface transition-colors">
 <span class="material-symbols-outlined">headset_mic</span>
 <span class="font-label-sm text-label-sm">Support</span>
 </a>
@@ -166,7 +167,7 @@
 <header class="w-full h-16 sticky top-0 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/20 shadow-sm flex justify-between items-center px-gutter z-50">
 <div class="flex items-center gap-4 flex-1 max-w-xl">
 <div class="relative w-full">
-<span class="material-symbols-outlined absolute left-3 top-[20px] -translate-y-1/2 text-on-surface-variant">search</span>
+<span onclick="document.getElementById('stock-search').focus()" class="material-symbols-outlined absolute left-3 top-[20px] -translate-y-1/2 text-on-surface-variant cursor-pointer hover:text-primary transition-colors">search</span>
 <input id="stock-search" type="text" placeholder="Search stock ticker (e.g. AAPL)... Press Enter" class="w-full bg-surface-container-low border border-outline-variant/20 rounded-full py-2 pl-10 pr-4 text-body-md focus:outline-none focus:border-primary/50 transition-all">
 <div id="stock-result-container" class="absolute top-full left-0 mt-2 w-full bg-surface-container-high rounded-xl border border-outline-variant/20 shadow-xl hidden z-50 p-4"></div>
 </div>
@@ -225,10 +226,10 @@
 </div>
 </div>
 <div class="flex gap-3">
-<button class="bg-surface-variant/50 border border-outline-variant/30 text-on-surface px-6 py-2.5 rounded-xl font-semibold hover:bg-surface-variant transition-colors">
+<button onclick="showToast('Portfolio Analytics coming soon!')" class="bg-surface-variant/50 border border-outline-variant/30 text-on-surface px-6 py-2.5 rounded-xl font-semibold hover:bg-surface-variant transition-colors">
                                 Portfolio Analytics
                             </button>
-<button class="bg-primary-container text-on-primary-fixed px-8 py-2.5 rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+<button onclick="showToast('Deposit flow coming soon!')" class="bg-primary-container text-on-primary-fixed px-8 py-2.5 rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
                                 Invest More
                             </button>
 </div>
@@ -240,20 +241,18 @@
 <div>
 <h3 class="font-title-md text-on-surface flex items-center gap-2">
 <span class="material-symbols-outlined text-primary">analytics</span>
-                                Market Pulse: NIFTY 50 Trends
+                                Market Pulse: Apple (AAPL) Trends
                             </h3>
 <p class="text-on-surface-variant font-label-sm">Visualizing intraday sentiment and momentum</p>
 </div>
 <div class="flex bg-surface-container-low p-1 rounded-lg border border-outline-variant/10">
-<button class="px-3 py-1 rounded text-xs font-bold bg-primary-container text-on-primary-fixed">1D</button>
-<button class="px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface">1W</button>
-<button class="px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface">1M</button>
-<button class="px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface">1Y</button>
+<button onclick="loadMainChart('AAPL', '1D')" class="main-range-btn px-3 py-1 rounded text-xs font-bold bg-primary-container text-on-primary-fixed">1D</button>
+<button onclick="loadMainChart('AAPL', '5D')" class="main-range-btn px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface">1W</button>
+<button onclick="loadMainChart('AAPL', '1M')" class="main-range-btn px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface">1M</button>
+<button onclick="loadMainChart('AAPL', '1Y')" class="main-range-btn px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface">1Y</button>
 </div>
 </div>
 <div id="chart-container" class="h-64 w-full relative">
-    <!-- Chart will be rendered here by LightweightCharts -->
-    <div class="absolute inset-0 flex items-center justify-center text-on-surface-variant">Select a stock to view chart</div>
 </div>
 </section>
 <!-- Trending Stocks Table -->
@@ -276,11 +275,12 @@
 <tbody id="watchlist-body" class="divide-y divide-outline-variant/10">
 <!-- Dynamic Rows Injected via WebSockets -->
 </tbody>
-</tbody>
 </table>
 </div>
 </section>
 </div>
+<!-- Right Column -->
+<div class="col-span-4 flex flex-col gap-gutter">
 <!-- Portfolio Allocation -->
 <section class="glass-surface p-6 rounded-3xl">
 <h3 class="font-title-md text-on-surface mb-6">Portfolio Allocation</h3>
@@ -325,11 +325,114 @@
 </div>
 </section>
 </div>
+</section>
+</div>
+</div>
+
+<!-- Stock Details Modal -->
+<div id="stock-details-modal" class="fixed inset-0 z-[100] bg-background/80 backdrop-blur-md hidden flex items-center justify-center p-gutter">
+    <div class="bg-surface border border-outline-variant/30 rounded-3xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden transform scale-95 transition-all duration-300" id="modal-container">
+        <!-- Header -->
+        <div class="p-6 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container-low">
+            <div class="flex items-center gap-4">
+                <div id="modal-logo" class="w-12 h-12 bg-surface-container rounded-lg flex items-center justify-center font-bold text-xl overflow-hidden text-primary">
+                    <!-- Logo or initials -->
+                </div>
+                <div>
+                    <h2 id="modal-company-name" class="font-headline-lg text-on-surface text-2xl truncate max-w-sm">Company Name</h2>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span id="modal-symbol" class="font-label-sm text-primary uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded">SYMBOL</span>
+                        <span id="modal-sector" class="font-label-sm text-on-surface-variant">Sector</span>
+                    </div>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="flex items-center justify-end gap-3 mb-1">
+                    <h3 id="modal-price" class="font-display-lg text-on-surface text-3xl">₹0.00</h3>
+                    <div id="modal-change-badge" class="px-2 py-1 rounded text-sm font-bold">0.00 (0.00%)</div>
+                </div>
+                <button onclick="closeStockDetails()" class="mt-2 text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1 text-sm float-right">
+                    <span class="material-symbols-outlined text-sm">close</span> Close
+                </button>
+            </div>
+        </div>
+        <!-- Body Grid -->
+        <div class="flex-1 overflow-y-auto p-6 grid grid-cols-12 gap-6">
+            <!-- Left: Chart & Stats -->
+            <div class="col-span-9 flex flex-col gap-6">
+                <!-- Chart Controls -->
+                <div class="flex items-center justify-between">
+                    <div id="chart-ranges" class="flex bg-surface-container-low p-1 rounded-lg border border-outline-variant/10 gap-1">
+                        <button onclick="loadModalChart('1D')" class="range-btn px-4 py-1.5 rounded text-sm font-medium transition-colors bg-primary-container text-on-primary-fixed">1D</button>
+                        <button onclick="loadModalChart('5D')" class="range-btn px-4 py-1.5 rounded text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors">5D</button>
+                        <button onclick="loadModalChart('1M')" class="range-btn px-4 py-1.5 rounded text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors">1M</button>
+                        <button onclick="loadModalChart('3M')" class="range-btn px-4 py-1.5 rounded text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors">3M</button>
+                        <button onclick="loadModalChart('6M')" class="range-btn px-4 py-1.5 rounded text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors">6M</button>
+                        <button onclick="loadModalChart('1Y')" class="range-btn px-4 py-1.5 rounded text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors">1Y</button>
+                        <button onclick="loadModalChart('5Y')" class="range-btn px-4 py-1.5 rounded text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors">5Y</button>
+                    </div>
+                </div>
+                <!-- Chart Container -->
+                <div id="modal-chart-container" class="w-full h-80 relative bg-surface-container-lowest rounded-xl border border-outline-variant/10 overflow-hidden"></div>
+                
+                <!-- Quick Stats Grid -->
+                <div class="grid grid-cols-6 gap-4">
+                    <div class="bg-surface-container-low p-3 rounded-xl">
+                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Open</p>
+                        <p id="modal-open" class="font-data-lg text-sm text-on-surface">--</p>
+                    </div>
+                    <div class="bg-surface-container-low p-3 rounded-xl">
+                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">High</p>
+                        <p id="modal-high" class="font-data-lg text-sm text-on-surface">--</p>
+                    </div>
+                    <div class="bg-surface-container-low p-3 rounded-xl">
+                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Low</p>
+                        <p id="modal-low" class="font-data-lg text-sm text-on-surface">--</p>
+                    </div>
+                    <div class="bg-surface-container-low p-3 rounded-xl">
+                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Prev Close</p>
+                        <p id="modal-prev-close" class="font-data-lg text-sm text-on-surface">--</p>
+                    </div>
+                    <div class="bg-surface-container-low p-3 rounded-xl">
+                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Volume</p>
+                        <p id="modal-volume" class="font-data-lg text-sm text-on-surface">--</p>
+                    </div>
+                    <div class="bg-surface-container-low p-3 rounded-xl">
+                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Market Cap</p>
+                        <p id="modal-mkt-cap" class="font-data-lg text-sm text-on-surface">--</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right: Trade Panel -->
+            <div class="col-span-3 flex flex-col gap-4">
+                <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10 flex-1">
+                    <h3 class="font-title-md text-on-surface mb-6 border-b border-outline-variant/10 pb-4">Trade Stock</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs text-on-surface-variant uppercase tracking-wider mb-2 block">Quantity</label>
+                            <input id="modal-trade-qty" type="number" min="1" value="1" class="w-full bg-surface border border-outline-variant/30 rounded-lg p-3 text-on-surface focus:outline-none focus:border-primary transition-colors">
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-on-surface-variant">Estimated Value:</span>
+                            <span id="modal-est-value" class="font-data-lg text-on-surface">₹0.00</span>
+                        </div>
+                        <div class="flex gap-3 pt-4">
+                            <button onclick="executeModalTrade('BUY')" class="flex-1 bg-[#00c853] text-white font-bold py-3 rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-[#00c853]/20">BUY</button>
+                            <button onclick="executeModalTrade('SELL')" class="flex-1 bg-[#ff3d00] text-white font-bold py-3 rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-[#ff3d00]/20">SELL</button>
+                        </div>
+                        <div id="modal-trade-msg" class="mt-4 text-center text-sm font-semibold hidden p-3 rounded-lg"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 </main>
 <script>
         // Store user balance globally
         let currentUserBalance = 0;
+        let allocationChart = null;
 
         // Fetch Session
         async function fetchSession() {
@@ -340,7 +443,6 @@
                     if (data.user) {
                         document.getElementById('user-name-display').textContent = data.user.name;
                         currentUserBalance = data.user.balance;
-                        document.getElementById('virtual-balance').textContent = `₹${data.user.balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
                     }
                 } else {
                     window.location.href = '/start.html';
@@ -373,16 +475,50 @@
                     if (data.holdings.length === 0) {
                         allocationBox.innerHTML = `<div class="text-sm text-on-surface-variant text-center">No investments yet.</div>`;
                     } else {
-                        allocationBox.innerHTML = data.holdings.map(h => {
-                            const percent = ((h.totalValue / data.totalInvested) * 100).toFixed(1);
-                            return `
-                            <div class="flex justify-between items-center text-sm bg-surface-container-low p-2 rounded">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-on-surface font-bold">${h.ticker.replace('.NS', '')}</span>
-                                </div>
-                                <span class="font-data-lg">${percent}%</span>
-                            </div>`;
-                        }).join('');
+                        if (!document.getElementById('allocation-chart')) {
+                            allocationBox.innerHTML = `<canvas id="allocation-chart"></canvas>`;
+                            allocationBox.classList.add('h-64', 'w-full', 'relative');
+                        }
+                        const ctx = document.getElementById('allocation-chart').getContext('2d');
+                        
+                        const labels = data.holdings.map(h => h.ticker.replace('.NS', ''));
+                        const values = data.holdings.map(h => h.totalValue);
+                        const colors = ['#ffb693', '#b7c8e1', '#c8c6c5', '#ffdbcc', '#8a9ab2', '#ff6b00', '#38485d'];
+                        
+                        if (allocationChart) {
+                            allocationChart.data.labels = labels;
+                            allocationChart.data.datasets[0].data = values;
+                            allocationChart.update();
+                        } else {
+                            allocationChart = new Chart(ctx, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        data: values,
+                                        backgroundColor: colors,
+                                        borderWidth: 0,
+                                        hoverOffset: 4
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            position: 'bottom',
+                                            labels: {
+                                                color: '#e2e2e2',
+                                                font: {
+                                                    family: 'Inter',
+                                                    size: 12
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
                     }
                 }
             } catch(e) {
@@ -400,94 +536,241 @@
             window.location.href = '/start.html';
         });
 
-        // Initialize Lightweight Chart
+        // Initialize Lightweight Chart for Main Pulse
         const chartContainer = document.getElementById('chart-container');
-        const chart = LightweightCharts.createChart(chartContainer, {
+        chartContainer.innerHTML = '';
+        window.mainChart = LightweightCharts.createChart(chartContainer, {
             width: chartContainer.clientWidth,
             height: chartContainer.clientHeight,
-            layout: {
-                backgroundColor: 'transparent',
-                textColor: '#c3c5d9',
-            },
-            grid: {
-                vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
-                horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
-            },
-            timeScale: {
-                borderColor: 'rgba(255, 255, 255, 0.1)'
+            layout: { backgroundColor: 'transparent', textColor: '#c3c5d9' },
+            grid: { vertLines: { color: 'rgba(255, 255, 255, 0.05)' }, horzLines: { color: 'rgba(255, 255, 255, 0.05)' } },
+            timeScale: { borderColor: 'rgba(255, 255, 255, 0.1)', timeVisible: true }
+        });
+        window.mainLineSeries = window.mainChart.addLineSeries({ color: '#ffb693', lineWidth: 2 });
+        new ResizeObserver(() => window.mainChart.resize(chartContainer.clientWidth, chartContainer.clientHeight)).observe(chartContainer);
+
+        async function loadMainChart(ticker, range) {
+            document.querySelectorAll('.main-range-btn').forEach(btn => {
+                btn.className = 'main-range-btn px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface';
+                if ((btn.textContent === '1D' && range === '1D') || (btn.textContent === '1W' && range === '5D') || (btn.textContent === '1M' && range === '1M') || (btn.textContent === '1Y' && range === '1Y')) {
+                    btn.className = 'main-range-btn px-3 py-1 rounded text-xs font-bold bg-primary-container text-on-primary-fixed';
+                }
+            });
+            try {
+                const res = await fetch(`/api/stock/history/${ticker}/${range}`);
+                const data = await res.json();
+                if (res.ok && data.length > 0) {
+                    window.mainLineSeries.setData(data.map(d => ({ time: d.time, value: d.close })));
+                    window.mainChart.timeScale().fitContent();
+                }
+            } catch (e) { console.error("Failed to load main chart", e); }
+        }
+        
+        // Load default chart on init
+        loadMainChart('AAPL', '1D');
+
+        // Toast System
+        function showToast(msg) {
+            let tc = document.getElementById('toast-container');
+            if (!tc) {
+                tc = document.createElement('div');
+                tc.id = 'toast-container';
+                tc.className = 'fixed bottom-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 pointer-events-none';
+                document.body.appendChild(tc);
             }
-        });
-        const lineSeries = chart.addLineSeries({
-            color: '#b7c4ff',
-            lineWidth: 2,
-        });
+            const toast = document.createElement('div');
+            toast.className = 'bg-primary text-on-primary px-6 py-3 rounded-lg shadow-xl font-bold text-sm transform transition-all duration-300 opacity-0 translate-y-4';
+            toast.textContent = msg;
+            tc.appendChild(toast);
+            setTimeout(() => toast.classList.remove('opacity-0', 'translate-y-4'), 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
 
         // Search bar functionality
         const searchInput = document.getElementById('stock-search');
         const resultContainer = document.getElementById('stock-result-container');
+        let searchTimeout = null;
 
-        searchInput.addEventListener('keypress', async (e) => {
-            if (e.key === 'Enter') {
-                const ticker = searchInput.value.trim().toUpperCase();
-                // Append .NS if missing
-                const formattedTicker = ticker.includes('.') ? ticker : `${ticker}.NS`;
-                if (!formattedTicker) return;
-                
-                // Show chart data
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            if (!query) {
+                resultContainer.classList.add('hidden');
+                return;
+            }
+            searchTimeout = setTimeout(async () => {
                 try {
-                    const res = await fetch(`/api/stock/history/${formattedTicker}`);
+                    const res = await fetch(`/api/stock/search/${encodeURIComponent(query)}`);
                     const data = await res.json();
-                    if (res.ok && data.length > 0) {
-                        // Clear placeholder and show chart
-                        chartContainer.innerHTML = '';
-                        chartContainer.appendChild(chart.chartElement());
-                        lineSeries.setData(data);
-                        chart.timeScale().fitContent();
+                    if (res.ok && data.quotes && data.quotes.length > 0) {
+                        const equityResults = data.quotes.filter(q => q.quoteType === 'EQUITY' || q.quoteType === 'INDEX');
+                        if (equityResults.length > 0) {
+                            resultContainer.innerHTML = equityResults.slice(0, 5).map(q => `
+                                <div class="flex justify-between items-center p-3 hover:bg-surface-variant/30 cursor-pointer rounded-lg transition-colors" onclick="openStockDetails('${q.symbol}')">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded bg-surface-container flex justify-center items-center font-bold text-xs text-primary">
+                                            ${q.symbol.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <div class="font-bold text-on-surface">${q.symbol}</div>
+                                            <div class="text-xs text-on-surface-variant line-clamp-1">${q.longname || q.shortname || 'Equity'}</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-primary text-xs font-bold px-2 py-1 bg-primary/10 rounded">Trade</div>
+                                </div>
+                            `).join('');
+                            resultContainer.classList.remove('hidden');
+                        } else {
+                            resultContainer.innerHTML = `<div class="p-4 text-center text-sm text-on-surface-variant">No stocks found.</div>`;
+                            resultContainer.classList.remove('hidden');
+                        }
+                    } else {
+                        resultContainer.innerHTML = `<div class="p-4 text-center text-sm text-on-surface-variant">No stocks found.</div>`;
+                        resultContainer.classList.remove('hidden');
                     }
                 } catch (e) {
-                    console.error("Failed to load chart", e);
+                    console.error("Search error", e);
                 }
-
-                // Show trade panel in search dropdown
-                resultContainer.innerHTML = `
-                    <div class="flex justify-between items-center mb-4">
-                        <div class="font-bold text-lg text-on-surface">${formattedTicker}</div>
-                    </div>
-                    <div class="flex gap-2">
-                        <input id="trade-qty" type="number" min="1" value="1" class="w-20 bg-surface-container border border-outline-variant/30 rounded px-2 text-on-surface" />
-                        <button onclick="executeTrade('${formattedTicker}', 'BUY')" class="bg-secondary text-on-secondary px-4 py-1 rounded font-bold hover:brightness-110 flex-1">BUY</button>
-                        <button onclick="executeTrade('${formattedTicker}', 'SELL')" class="bg-error text-on-error px-4 py-1 rounded font-bold hover:brightness-110 flex-1">SELL</button>
-                    </div>
-                    <div id="trade-msg" class="mt-2 text-xs font-semibold"></div>
-                `;
-                resultContainer.classList.remove('hidden');
-            }
+            }, 300);
         });
 
-        // Trade Execution
-        async function executeTrade(ticker, type) {
-            const qty = document.getElementById('trade-qty').value;
-            const msgBox = document.getElementById('trade-msg');
+        // Stock Details Modal & Trading
+        let currentModalTicker = '';
+        let modalChart = null;
+        let modalSeries = null;
+
+        async function openStockDetails(ticker) {
+            resultContainer.classList.add('hidden');
+            searchInput.value = '';
+            
+            const modal = document.getElementById('stock-details-modal');
+            const modalContainer = document.getElementById('modal-container');
+            modal.classList.remove('hidden');
+            setTimeout(() => modalContainer.classList.remove('scale-95'), 10); // Animate in
+            
+            currentModalTicker = ticker;
+            
+            // Show loading state
+            document.getElementById('modal-company-name').textContent = 'Loading...';
+            document.getElementById('modal-symbol').textContent = ticker;
+            
+            // Initialize chart if needed
+            if (!modalChart) {
+                const mc = document.getElementById('modal-chart-container');
+                modalChart = LightweightCharts.createChart(mc, {
+                    width: mc.clientWidth,
+                    height: mc.clientHeight,
+                    layout: { backgroundColor: 'transparent', textColor: '#c3c5d9' },
+                    grid: { vertLines: { color: 'rgba(255, 255, 255, 0.05)' }, horzLines: { color: 'rgba(255, 255, 255, 0.05)' } },
+                    timeScale: { borderColor: 'rgba(255, 255, 255, 0.1)', timeVisible: true }
+                });
+                modalSeries = modalChart.addCandlestickSeries({
+                    upColor: '#00c853', downColor: '#ff3d00', borderVisible: false, wickUpColor: '#00c853', wickDownColor: '#ff3d00'
+                });
+                new ResizeObserver(() => modalChart.resize(mc.clientWidth, mc.clientHeight)).observe(mc);
+            }
+
+            try {
+                // Fetch quote
+                const resQuote = await fetch(`/api/stock/quote/${ticker}`);
+                const quote = await resQuote.json();
+                
+                document.getElementById('modal-company-name').textContent = quote.longName || quote.shortName || ticker;
+                document.getElementById('modal-sector').textContent = quote.sector || 'Equities';
+                
+                const isPos = quote.regularMarketChange >= 0;
+                const priceEl = document.getElementById('modal-price');
+                const badgeEl = document.getElementById('modal-change-badge');
+                
+                priceEl.textContent = `₹${quote.regularMarketPrice.toFixed(2)}`;
+                badgeEl.textContent = `${isPos ? '+' : ''}${quote.regularMarketChange.toFixed(2)} (${quote.regularMarketChangePercent.toFixed(2)}%)`;
+                badgeEl.className = `px-2 py-1 rounded text-sm font-bold ${isPos ? 'bg-[#00c853]/20 text-[#00c853]' : 'bg-[#ff3d00]/20 text-[#ff3d00]'}`;
+                
+                document.getElementById('modal-open').textContent = quote.regularMarketOpen ? quote.regularMarketOpen.toFixed(2) : '--';
+                document.getElementById('modal-high').textContent = quote.regularMarketDayHigh ? quote.regularMarketDayHigh.toFixed(2) : '--';
+                document.getElementById('modal-low').textContent = quote.regularMarketDayLow ? quote.regularMarketDayLow.toFixed(2) : '--';
+                document.getElementById('modal-prev-close').textContent = quote.regularMarketPreviousClose ? quote.regularMarketPreviousClose.toFixed(2) : '--';
+                document.getElementById('modal-volume').textContent = quote.regularMarketVolume ? quote.regularMarketVolume.toLocaleString() : '--';
+                
+                const fmtMktCap = quote.marketCap ? (quote.marketCap >= 1e12 ? (quote.marketCap/1e12).toFixed(2) + 'T' : quote.marketCap >= 1e9 ? (quote.marketCap/1e9).toFixed(2) + 'B' : (quote.marketCap/1e6).toFixed(2) + 'M') : '--';
+                document.getElementById('modal-mkt-cap').textContent = fmtMktCap;
+
+                // Set logo initial
+                document.getElementById('modal-logo').textContent = quote.symbol.charAt(0);
+
+                // Setup Trade Panel
+                const qtyInput = document.getElementById('modal-trade-qty');
+                const estVal = document.getElementById('modal-est-value');
+                const updateEst = () => estVal.textContent = `₹${(quote.regularMarketPrice * qtyInput.value).toFixed(2)}`;
+                qtyInput.oninput = updateEst;
+                updateEst();
+                
+                // Clear trade msg
+                document.getElementById('modal-trade-msg').classList.add('hidden');
+
+                // Load initial 1D chart
+                loadModalChart('1D');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function loadModalChart(range) {
+            document.querySelectorAll('.range-btn').forEach(btn => {
+                btn.className = 'range-btn px-4 py-1.5 rounded text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors';
+                if (btn.textContent === range) {
+                    btn.className = 'range-btn px-4 py-1.5 rounded text-sm font-medium transition-colors bg-primary-container text-on-primary-fixed';
+                }
+            });
+
+            try {
+                const res = await fetch(`/api/stock/history/${currentModalTicker}/${range}`);
+                const data = await res.json();
+                if (res.ok && data.length > 0) {
+                    modalSeries.setData(data);
+                    modalChart.timeScale().fitContent();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        
+        function closeStockDetails() {
+            const modalContainer = document.getElementById('modal-container');
+            modalContainer.classList.add('scale-95');
+            setTimeout(() => {
+                document.getElementById('stock-details-modal').classList.add('hidden');
+            }, 300);
+        }
+
+        async function executeModalTrade(type) {
+            const qty = document.getElementById('modal-trade-qty').value;
+            const msgBox = document.getElementById('modal-trade-msg');
+            msgBox.classList.remove('hidden');
+            msgBox.className = "mt-4 text-center text-sm font-semibold p-3 rounded-lg bg-surface-variant text-on-surface";
             msgBox.textContent = "Executing...";
             
             try {
                 const res = await fetch('/api/trade', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ticker, type, quantity: qty })
+                    body: JSON.stringify({ ticker: currentModalTicker, type, quantity: qty })
                 });
                 const data = await res.json();
                 
                 if (res.ok) {
-                    msgBox.className = "mt-2 text-xs font-semibold text-primary";
-                    msgBox.textContent = `Success: ${type} ${qty} ${ticker} @ ₹${data.price.toFixed(2)}`;
-                    fetchDashboard(); // Update dashboard
+                    msgBox.className = "mt-4 text-center text-sm font-semibold p-3 rounded-lg bg-[#00c853]/20 text-[#00c853]";
+                    msgBox.textContent = `Success: ${type} ${qty} @ ₹${data.price.toFixed(2)}`;
+                    fetchDashboard();
                 } else {
-                    msgBox.className = "mt-2 text-xs font-semibold text-error";
+                    msgBox.className = "mt-4 text-center text-sm font-semibold p-3 rounded-lg bg-[#ff3d00]/20 text-[#ff3d00]";
                     msgBox.textContent = `Failed: ${data.error}`;
                 }
             } catch (e) {
-                msgBox.className = "mt-2 text-xs font-semibold text-error";
+                msgBox.className = "mt-4 text-center text-sm font-semibold p-3 rounded-lg bg-[#ff3d00]/20 text-[#ff3d00]";
                 msgBox.textContent = "Network Error";
             }
         }
