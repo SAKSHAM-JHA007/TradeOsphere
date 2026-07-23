@@ -58,6 +58,14 @@ const db = new sqlite3.Database('./database.sqlite', (err) => {
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(user_id) REFERENCES users(id)
             )`);
+
+            db.run(`CREATE TABLE IF NOT EXISTS watchlist (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                ticker TEXT,
+                FOREIGN KEY(user_id) REFERENCES users(id),
+                UNIQUE(user_id, ticker)
+            )`);
         });
     }
 });
@@ -352,11 +360,19 @@ app.get('/api/stock/history/:ticker/:range', requireAuth, async (req, res) => {
 });
 
 // Periodic Finnhub fetching and WebSocket broadcasting
-const WATCHLIST = ['AAPL', 'MSFT', 'TSLA', 'GOOGL', 'AMZN', 'NVDA', 'META', 'SPY', 'QQQ'];
+const globalWatchlist = new Set(['AAPL', 'MSFT', 'TSLA', 'GOOGL', 'AMZN', 'NVDA', 'META', 'SPY', 'QQQ']);
+
+// Load all unique tickers from watchlist on startup
+db.all(`SELECT DISTINCT ticker FROM watchlist`, [], (err, rows) => {
+    if (!err && rows) {
+        rows.forEach(r => globalWatchlist.add(r.ticker));
+    }
+});
 
 cron.schedule('*/10 * * * * *', async () => {
     try {
-        const quotes = await Promise.all(WATCHLIST.map(async ticker => {
+        const tickersToFetch = Array.from(globalWatchlist);
+        const quotes = await Promise.all(tickersToFetch.map(async ticker => {
             try {
                 const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
                 const data = await res.json();
@@ -374,6 +390,34 @@ cron.schedule('*/10 * * * * *', async () => {
         console.error('Error fetching market updates', err);
     }
 });
+
+// Watchlist API Endpoints
+app.get('/api/watchlist', requireAuth, (req, res) => {
+    db.all(`SELECT ticker FROM watchlist WHERE user_id = ?`, [req.user.id], (err, rows) => {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        res.json(rows.map(r => r.ticker));
+    });
+});
+
+app.post('/api/watchlist', requireAuth, (req, res) => {
+    const { ticker } = req.body;
+    if (!ticker) return res.status(400).json({ error: 'Ticker is required' });
+    
+    db.run(`INSERT OR IGNORE INTO watchlist (user_id, ticker) VALUES (?, ?)`, [req.user.id, ticker], function(err) {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        globalWatchlist.add(ticker);
+        res.json({ message: 'Added to watchlist' });
+    });
+});
+
+app.delete('/api/watchlist/:ticker', requireAuth, (req, res) => {
+    const ticker = req.params.ticker;
+    db.run(`DELETE FROM watchlist WHERE user_id = ? AND ticker = ?`, [req.user.id, ticker], function(err) {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        res.json({ message: 'Removed from watchlist' });
+    });
+});
+
 
 io.on('connection', (socket) => {
     console.log('A client connected for real-time updates');

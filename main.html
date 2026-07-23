@@ -108,7 +108,7 @@
 <span class="material-symbols-outlined">dashboard</span>
 <span class="font-label-sm text-label-sm">Dashboard</span>
 </a>
-<a href="#" onclick="showToast('Watchlist feature coming soon!')" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
+<a href="#" onclick="document.getElementById('watchlist-section').scrollIntoView({behavior: 'smooth'})" class="flex items-center gap-3 text-on-surface-variant p-3 mx-2 hover:bg-secondary-container/30 hover:text-on-surface transition-all duration-300 ease-in-out cursor-pointer active:scale-95">
 <span class="material-symbols-outlined">list_alt</span>
 <span class="font-label-sm text-label-sm">Watchlist</span>
 </a>
@@ -256,10 +256,10 @@
 </div>
 </section>
 <!-- Trending Stocks Table -->
-<section class="glass-surface rounded-3xl overflow-hidden">
+<section id="watchlist-section" class="glass-surface rounded-3xl overflow-hidden">
 <div class="p-6 border-b border-outline-variant/10 flex justify-between items-center">
-<h3 class="font-title-md text-on-surface">Trending Stocks</h3>
-<button class="text-primary font-label-sm hover:underline">View All Market</button>
+<h3 class="font-title-md text-on-surface">My Watchlist</h3>
+<button class="text-primary font-label-sm hover:underline">Manage</button>
 </div>
 <div class="overflow-x-auto">
 <table class="w-full text-left">
@@ -421,6 +421,10 @@
                             <button onclick="executeModalTrade('BUY')" class="flex-1 bg-[#00c853] text-white font-bold py-3 rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-[#00c853]/20">BUY</button>
                             <button onclick="executeModalTrade('SELL')" class="flex-1 bg-[#ff3d00] text-white font-bold py-3 rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-[#ff3d00]/20">SELL</button>
                         </div>
+                        <button onclick="toggleWatchlist()" id="modal-watchlist-btn" class="w-full mt-2 bg-surface-variant text-on-surface font-bold py-3 rounded-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined" id="modal-watchlist-icon">star_border</span>
+                            <span id="modal-watchlist-text">Add to Watchlist</span>
+                        </button>
                         <div id="modal-trade-msg" class="mt-4 text-center text-sm font-semibold hidden p-3 rounded-lg"></div>
                     </div>
                 </div>
@@ -433,6 +437,7 @@
         // Store user balance globally
         let currentUserBalance = 0;
         let allocationChart = null;
+        let myWatchlist = [];
 
         // Fetch Session
         async function fetchSession() {
@@ -449,6 +454,18 @@
                 }
             } catch (e) {
                 console.error('Session check failed', e);
+            }
+        }
+
+        // Fetch Watchlist
+        async function fetchWatchlist() {
+            try {
+                const res = await fetch('/api/watchlist');
+                if (res.ok) {
+                    myWatchlist = await res.json();
+                }
+            } catch (e) {
+                console.error('Watchlist fetch failed', e);
             }
         }
 
@@ -528,6 +545,7 @@
         
         fetchSession();
         fetchDashboard();
+        fetchWatchlist();
 
         // Logout
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
@@ -708,6 +726,11 @@
                 qtyInput.oninput = updateEst;
                 updateEst();
                 
+                // Watchlist button state
+                const inWatchlist = myWatchlist.includes(ticker);
+                document.getElementById('modal-watchlist-icon').textContent = inWatchlist ? 'star' : 'star_border';
+                document.getElementById('modal-watchlist-text').textContent = inWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist';
+                
                 // Clear trade msg
                 document.getElementById('modal-trade-msg').classList.add('hidden');
 
@@ -744,6 +767,36 @@
             setTimeout(() => {
                 document.getElementById('stock-details-modal').classList.add('hidden');
             }, 300);
+        }
+
+        async function toggleWatchlist() {
+            const ticker = currentModalTicker;
+            const inWatchlist = myWatchlist.includes(ticker);
+            const method = inWatchlist ? 'DELETE' : 'POST';
+            const url = inWatchlist ? `/api/watchlist/${ticker}` : '/api/watchlist';
+            
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: inWatchlist ? null : JSON.stringify({ ticker })
+                });
+                
+                if (res.ok) {
+                    if (inWatchlist) {
+                        myWatchlist = myWatchlist.filter(t => t !== ticker);
+                    } else {
+                        myWatchlist.push(ticker);
+                    }
+                    
+                    document.getElementById('modal-watchlist-icon').textContent = !inWatchlist ? 'star' : 'star_border';
+                    document.getElementById('modal-watchlist-text').textContent = !inWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist';
+                    showToast(inWatchlist ? 'Removed from Watchlist' : 'Added to Watchlist');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Failed to update watchlist');
+            }
         }
 
         async function executeModalTrade(type) {
@@ -795,22 +848,27 @@
             `).join('');
 
             // Watchlist table
-            watchlistBody.innerHTML = stocks.map(stock => {
-                const isPositive = stock.change > 0;
-                const color = isPositive ? 'text-primary' : 'text-error';
-                return `
-                    <tr class="hover:bg-surface-variant/20 transition-colors group cursor-pointer" onclick="searchInput.value='${stock.symbol}'; searchInput.dispatchEvent(new KeyboardEvent('keypress', {'key':'Enter'}))">
-                        <td class="px-6 py-4 font-semibold text-on-surface">${stock.symbol.replace('.NS', '')}</td>
-                        <td class="px-6 py-4 font-data-lg text-sm text-on-surface">₹${stock.price?.toFixed(2) || 'N/A'}</td>
-                        <td class="px-6 py-4 font-semibold ${color}">
-                            ${isPositive ? '+' : ''}${stock.changePercent?.toFixed(2) || '0'}%
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <span class="material-symbols-outlined text-sm text-on-surface-variant group-hover:text-primary transition-colors">show_chart</span>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
+            let watchlistStocks = stocks.filter(s => myWatchlist.includes(s.symbol));
+            if (watchlistStocks.length === 0) {
+                watchlistBody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-on-surface-variant text-sm">Your watchlist is empty. Search and add stocks to track them here.</td></tr>`;
+            } else {
+                watchlistBody.innerHTML = watchlistStocks.map(stock => {
+                    const isPositive = stock.change > 0;
+                    const color = isPositive ? 'text-primary' : 'text-error';
+                    return `
+                        <tr class="hover:bg-surface-variant/20 transition-colors group cursor-pointer" onclick="searchInput.value='${stock.symbol}'; searchInput.dispatchEvent(new KeyboardEvent('keypress', {'key':'Enter'}))">
+                            <td class="px-6 py-4 font-semibold text-on-surface">${stock.symbol.replace('.NS', '')}</td>
+                            <td class="px-6 py-4 font-data-lg text-sm text-on-surface">₹${stock.price?.toFixed(2) || 'N/A'}</td>
+                            <td class="px-6 py-4 font-semibold ${color}">
+                                ${isPositive ? '+' : ''}${stock.changePercent?.toFixed(2) || '0'}%
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <span class="material-symbols-outlined text-sm text-on-surface-variant group-hover:text-primary transition-colors">show_chart</span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
 
             // Top Gainers / Losers
             const sorted = [...stocks].sort((a,b) => b.changePercent - a.changePercent);
