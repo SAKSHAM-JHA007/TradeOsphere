@@ -279,9 +279,21 @@ app.get('/api/stock/search/:query', requireAuth, async (req, res) => {
     }
 });
 
+const quoteCache = new Map();
+const QUOTE_CACHE_TTL = 60000; // 60 seconds
+
 app.get('/api/stock/quote/:ticker', requireAuth, async (req, res) => {
     try {
         const ticker = req.params.ticker;
+
+        const now = Date.now();
+        if (quoteCache.has(ticker)) {
+            const cached = quoteCache.get(ticker);
+            if (now - cached.timestamp < QUOTE_CACHE_TTL) {
+                return res.json(cached.data);
+            }
+        }
+
         const [quoteRes, profileRes] = await Promise.all([
             fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`).then(r => r.json()),
             fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${FINNHUB_API_KEY}`).then(r => r.json())
@@ -301,6 +313,12 @@ app.get('/api/stock/quote/:ticker', requireAuth, async (req, res) => {
             marketCap: profileRes.marketCapitalization ? profileRes.marketCapitalization * 1000000 : null,
             regularMarketVolume: null // Finnhub quote doesn't return volume in standard tier easily, keep null
         };
+
+        quoteCache.set(ticker, {
+            data: mappedQuote,
+            timestamp: now
+        });
+
         res.json(mappedQuote);
     } catch (err) {
         res.status(500).json({ error: 'Error fetching quote' });
