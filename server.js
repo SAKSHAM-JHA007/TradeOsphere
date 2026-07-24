@@ -369,12 +369,30 @@ db.all(`SELECT DISTINCT ticker FROM watchlist`, [], (err, rows) => {
     }
 });
 
+let currentWatchlistIndex = 0;
+const MAX_REQUESTS_PER_CRON = 8; // 6 runs/min * 8 reqs = 48 reqs/min (leaves room under 60 limit)
+
 cron.schedule('*/10 * * * * *', async () => {
     try {
-        const tickersToFetch = Array.from(globalWatchlist);
+        const allTickers = Array.from(globalWatchlist);
+        if (allTickers.length === 0) return;
+
+        // Take a chunk of up to MAX_REQUESTS_PER_CRON items
+        const tickersToFetch = [];
+        const numToFetch = Math.min(MAX_REQUESTS_PER_CRON, allTickers.length);
+
+        for (let i = 0; i < numToFetch; i++) {
+            if (currentWatchlistIndex >= allTickers.length) {
+                currentWatchlistIndex = 0;
+            }
+            tickersToFetch.push(allTickers[currentWatchlistIndex]);
+            currentWatchlistIndex++;
+        }
+
         const quotes = await Promise.all(tickersToFetch.map(async ticker => {
             try {
                 const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
+                if (!res.ok) return null; // Avoid crashing on 429 or other errors
                 const data = await res.json();
                 return {
                     symbol: ticker,
@@ -384,8 +402,11 @@ cron.schedule('*/10 * * * * *', async () => {
                 };
             } catch(e) { return null; }
         }));
-        const marketData = quotes.filter(q => q && q.price !== 0);
-        io.emit('marketUpdate', marketData);
+
+        const marketData = quotes.filter(q => q && q.price && q.price !== 0);
+        if (marketData.length > 0) {
+            io.emit('marketUpdate', marketData);
+        }
     } catch (err) {
         console.error('Error fetching market updates', err);
     }
