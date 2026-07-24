@@ -156,13 +156,17 @@ app.get('/api/portfolio', requireAuth, (req, res) => {
             const tickers = rows.map(r => r.ticker);
             let quotes = [];
             if (tickers.length > 0) {
-                quotes = await Promise.all(tickers.map(async t => {
-                    try {
-                        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${FINNHUB_API_KEY}`);
-                        const data = await res.json();
-                        return { symbol: t, regularMarketPrice: data.c, regularMarketPreviousClose: data.pc, regularMarketChangePercent: data.dp };
-                    } catch(e) { return null; }
-                }));
+                try {
+                    const data = await yahooFinance.quote(tickers);
+                    quotes = data.map(q => ({
+                        symbol: q.symbol,
+                        regularMarketPrice: q.regularMarketPrice,
+                        regularMarketPreviousClose: q.regularMarketPreviousClose,
+                        regularMarketChangePercent: q.regularMarketChangePercent
+                    }));
+                } catch (e) {
+                    console.error('Error fetching batch quotes:', e);
+                }
             }
             const quoteMap = quotes.filter(q => q).reduce((acc, q) => ({ ...acc, [q.symbol]: q }), {});
             
