@@ -7,12 +7,13 @@ const dotenv = require('dotenv');
 const path = require('path');
 const http = require('http');
 const { Server } = require('socket.io');
-const FINNHUB_API_KEY = 'd9dkkl1r01qui7p2j8vgd9dkkl1r01qui7p2j900';
 const YahooFinance = require('yahoo-finance2').default;
 const yahooFinance = new YahooFinance();
 const cron = require('node-cron');
 
 dotenv.config();
+
+const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
 
 const app = express();
 const server = http.createServer(app);
