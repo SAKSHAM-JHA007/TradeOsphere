@@ -157,8 +157,8 @@ app.get('/api/portfolio', requireAuth, (req, res) => {
             if (tickers.length > 0) {
                 quotes = await Promise.all(tickers.map(async t => {
                     try {
-                        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${FINNHUB_API_KEY}`);
-                        const data = await res.json();
+                        const fetchResponse = await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${FINNHUB_API_KEY}`);
+                        const data = await fetchResponse.json();
                         return { symbol: t, regularMarketPrice: data.c, regularMarketPreviousClose: data.pc, regularMarketChangePercent: data.dp };
                     } catch(e) { return null; }
                 }));
@@ -220,8 +220,8 @@ app.post('/api/trade', requireAuth, async (req, res) => {
     }
 
     try {
-        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
-        const quote = await res.json();
+        const fetchResponse = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
+        const quote = await fetchResponse.json();
         if (!quote || !quote.c || quote.c === 0) return res.status(400).json({ error: 'Invalid ticker symbol or no price data' });
         
         const price = quote.c;
@@ -362,7 +362,7 @@ app.get('/api/stock/history/:ticker/:range', requireAuth, async (req, res) => {
             interval = '1d';
         }
 
-        const result = await yahooFinance.chart(ticker, { period1, interval });
+        const result = await yahooFinance.chart(ticker, { period1, period2: new Date(), interval });
         
         if (!result.quotes || result.quotes.length === 0) return res.json([]);
         
@@ -397,8 +397,8 @@ cron.schedule('*/10 * * * * *', async () => {
         const tickersToFetch = Array.from(globalWatchlist);
         const quotes = await Promise.all(tickersToFetch.map(async ticker => {
             try {
-                const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
-                const data = await res.json();
+                const fetchResponse = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
+                const data = await fetchResponse.json();
                 return {
                     symbol: ticker,
                     price: data.c,
@@ -443,7 +443,7 @@ app.delete('/api/watchlist/:ticker', requireAuth, (req, res) => {
 
 
 io.on('connection', (socket) => {
-    console.log('A client connected for real-time updates');
+
 });
 
 // Static files and protected routes
@@ -461,5 +461,5 @@ app.get('/main.html', (req, res, next) => {
 app.use(express.static(path.join(__dirname, 'public'), { etag: false, maxAge: 0 }));
 
 server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+
 });
