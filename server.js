@@ -18,7 +18,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-do-not-use-in-production';
+
+if (!process.env.JWT_SECRET) {
+    console.error('FATAL ERROR: JWT_SECRET is not defined.');
+    process.exit(1);
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Middleware
 app.use(express.json());
