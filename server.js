@@ -221,8 +221,8 @@ app.post('/api/trade', requireAuth, async (req, res) => {
     }
 
     try {
-        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
-        const quote = await res.json();
+        const fetchRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
+        const quote = await fetchRes.json();
         if (!quote || !quote.c || quote.c === 0) return res.status(400).json({ error: 'Invalid ticker symbol or no price data' });
         
         const price = quote.c;
@@ -258,7 +258,13 @@ app.post('/api/trade', requireAuth, async (req, res) => {
                         // Update portfolio
                         const newQty = item.quantity - qty;
                         db.run(`UPDATE portfolio SET quantity = ? WHERE id = ?`, [newQty, item.id]);
+
+                        // Record transaction
+                        db.run(`INSERT INTO transactions (user_id, ticker, type, quantity, price) VALUES (?, ?, ?, ?, ?)`, [req.user.id, ticker, type, qty, price]);
+
+                        res.json({ message: 'Trade executed successfully', price, totalValue });
                     });
+                    return; // Prevent fallthrough to the end of the outer block
                 } else {
                     return res.status(400).json({ error: 'Invalid trade type' });
                 }
@@ -398,7 +404,7 @@ cron.schedule('*/10 * * * * *', async () => {
         const tickersToFetch = Array.from(globalWatchlist);
         const quotes = await Promise.all(tickersToFetch.map(async ticker => {
             try {
-                const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
+                const fetchRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
                 const data = await res.json();
                 return {
                     symbol: ticker,
@@ -461,6 +467,10 @@ app.get('/main.html', (req, res, next) => {
 
 app.use(express.static(path.join(__dirname, 'public'), { etag: false, maxAge: 0 }));
 
-server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+    server.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = { app, server, db };
