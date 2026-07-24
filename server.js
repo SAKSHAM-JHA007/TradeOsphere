@@ -26,7 +26,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Database Setup
-const db = new sqlite3.Database('./database.sqlite', (err) => {
+const dbPath = process.env.NODE_ENV === 'test' ? ':memory:' : './database.sqlite';
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error opening database', err);
     } else {
@@ -369,27 +370,29 @@ db.all(`SELECT DISTINCT ticker FROM watchlist`, [], (err, rows) => {
     }
 });
 
-cron.schedule('*/10 * * * * *', async () => {
-    try {
-        const tickersToFetch = Array.from(globalWatchlist);
-        const quotes = await Promise.all(tickersToFetch.map(async ticker => {
-            try {
-                const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
-                const data = await res.json();
-                return {
-                    symbol: ticker,
-                    price: data.c,
-                    change: data.d,
-                    changePercent: data.dp
-                };
-            } catch(e) { return null; }
-        }));
-        const marketData = quotes.filter(q => q && q.price !== 0);
-        io.emit('marketUpdate', marketData);
-    } catch (err) {
-        console.error('Error fetching market updates', err);
-    }
-});
+if (process.env.NODE_ENV !== 'test') {
+    cron.schedule('*/10 * * * * *', async () => {
+        try {
+            const tickersToFetch = Array.from(globalWatchlist);
+            const quotes = await Promise.all(tickersToFetch.map(async ticker => {
+                try {
+                    const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
+                    const data = await res.json();
+                    return {
+                        symbol: ticker,
+                        price: data.c,
+                        change: data.d,
+                        changePercent: data.dp
+                    };
+                } catch(e) { return null; }
+            }));
+            const marketData = quotes.filter(q => q && q.price !== 0);
+            io.emit('marketUpdate', marketData);
+        } catch (err) {
+            console.error('Error fetching market updates', err);
+        }
+    });
+}
 
 // Watchlist API Endpoints
 app.get('/api/watchlist', requireAuth, (req, res) => {
@@ -437,6 +440,10 @@ app.get('/main.html', (req, res, next) => {
 
 app.use(express.static(path.join(__dirname, ''), { etag: false, maxAge: 0 }));
 
-server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+    server.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = { app, server, db };
