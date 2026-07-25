@@ -453,7 +453,6 @@
                     window.location.href = '/start.html';
                 }
             } catch (e) {
-                console.error('Session check failed', e);
             }
         }
 
@@ -465,7 +464,6 @@
                     myWatchlist = await res.json();
                 }
             } catch (e) {
-                console.error('Watchlist fetch failed', e);
             }
         }
 
@@ -539,7 +537,6 @@
                     }
                 }
             } catch(e) {
-                console.error("Dashboard fetch error", e);
             }
         }
         
@@ -581,7 +578,7 @@
                     window.mainLineSeries.setData(data.map(d => ({ time: d.time, value: d.close })));
                     window.mainChart.timeScale().fitContent();
                 }
-            } catch (e) { console.error("Failed to load main chart", e); }
+            } catch (e) { }
         }
         
         // Load default chart on init
@@ -650,7 +647,6 @@
                         resultContainer.classList.remove('hidden');
                     }
                 } catch (e) {
-                    console.error("Search error", e);
                 }
             }, 300);
         });
@@ -737,7 +733,6 @@
                 // Load initial 1D chart
                 loadModalChart('1D');
             } catch (e) {
-                console.error(e);
             }
         }
 
@@ -757,7 +752,6 @@
                     modalChart.timeScale().fitContent();
                 }
             } catch (e) {
-                console.error(e);
             }
         }
         
@@ -794,7 +788,6 @@
                     showToast(inWatchlist ? 'Removed from Watchlist' : 'Added to Watchlist');
                 }
             } catch (e) {
-                console.error(e);
                 showToast('Failed to update watchlist');
             }
         }
