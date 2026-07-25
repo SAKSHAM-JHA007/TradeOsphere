@@ -15,6 +15,14 @@ dotenv.config();
 
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
 
+async function fetchFinnhubQuote(symbol) {
+    const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`);
+    if (!res.ok) {
+        throw new Error(`Finnhub API error: ${res.status} ${res.statusText}`);
+    }
+    return res.json();
+}
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -158,8 +166,7 @@ app.get('/api/portfolio', requireAuth, (req, res) => {
             if (tickers.length > 0) {
                 quotes = await Promise.all(tickers.map(async t => {
                     try {
-                        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${FINNHUB_API_KEY}`);
-                        const data = await res.json();
+                        const data = await fetchFinnhubQuote(t);
                         return { symbol: t, regularMarketPrice: data.c, regularMarketPreviousClose: data.pc, regularMarketChangePercent: data.dp };
                     } catch(e) { return null; }
                 }));
@@ -221,8 +228,7 @@ app.post('/api/trade', requireAuth, async (req, res) => {
     }
 
     try {
-        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
-        const quote = await res.json();
+        const quote = await fetchFinnhubQuote(ticker);
         if (!quote || !quote.c || quote.c === 0) return res.status(400).json({ error: 'Invalid ticker symbol or no price data' });
         
         const price = quote.c;
@@ -301,8 +307,11 @@ app.get('/api/stock/quote/:ticker', requireAuth, async (req, res) => {
         }
 
         const [quoteRes, profileRes] = await Promise.all([
-            fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`).then(r => r.json()),
-            fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${FINNHUB_API_KEY}`).then(r => r.json())
+            fetchFinnhubQuote(ticker),
+            fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${FINNHUB_API_KEY}`).then(r => {
+                if (!r.ok) throw new Error(`Finnhub API error: ${r.status} ${r.statusText}`);
+                return r.json();
+            })
         ]);
         
         const mappedQuote = {
@@ -415,9 +424,7 @@ cron.schedule('*/10 * * * * *', async () => {
 
         const quotes = await Promise.all(tickersToFetch.map(async ticker => {
             try {
-                const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
-                if (!res.ok) return null; // Avoid crashing on 429 or other errors
-                const data = await res.json();
+                const data = await fetchFinnhubQuote(ticker);
                 return {
                     symbol: ticker,
                     price: data.c,
