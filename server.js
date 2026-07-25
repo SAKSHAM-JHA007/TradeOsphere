@@ -465,7 +465,6 @@ app.delete('/api/watchlist/:ticker', requireAuth, (req, res) => {
 
 
 io.on('connection', (socket) => {
-    console.log('A client connected for real-time updates');
 });
 
 // Static files and protected routes
