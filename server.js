@@ -279,7 +279,7 @@ app.post('/api/trade', requireAuth, async (req, res) => {
 
 app.get('/api/stock/search/:query', requireAuth, async (req, res) => {
     try {
-        const fetchRes = await fetch(`https://finnhub.io/api/v1/search?q=${req.params.query}&token=${FINNHUB_API_KEY}`);
+        const fetchRes = await fetch(`https://finnhub.io/api/v1/search?q=${encodeURIComponent(req.params.query)}&token=${FINNHUB_API_KEY}`);
         const result = await fetchRes.json();
         // Map to expected frontend structure
         res.json({ quotes: result.result.map(r => ({ symbol: r.displaySymbol, longname: r.description, quoteType: 'EQUITY' })) });
