@@ -164,7 +164,10 @@ app.get('/api/portfolio', requireAuth, (req, res) => {
                         const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${FINNHUB_API_KEY}`);
                         const data = await res.json();
                         return { symbol: t, regularMarketPrice: data.c, regularMarketPreviousClose: data.pc, regularMarketChangePercent: data.dp };
-                    } catch(e) { return null; }
+                    } catch(e) {
+                        console.error('Error fetching quote for', t, ':', e);
+                        return null;
+                    }
                 }));
             }
             const quoteMap = quotes.filter(q => q).reduce((acc, q) => ({ ...acc, [q.symbol]: q }), {});
@@ -427,7 +430,10 @@ cron.schedule('*/10 * * * * *', async () => {
                     change: data.d,
                     changePercent: data.dp
                 };
-            } catch(e) { return null; }
+            } catch(e) {
+                console.error('Error fetching market update for', ticker, ':', e);
+                return null;
+            }
         }));
 
         const marketData = quotes.filter(q => q && q.price && q.price !== 0);
