@@ -32,7 +32,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Database Setup
-const db = new sqlite3.Database('./database.sqlite', (err) => {
+const dbPath = process.env.NODE_ENV === 'test' ? ':memory:' : './database.sqlite';
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error opening database', err);
     } else {
@@ -484,6 +485,10 @@ app.get('/main.html', (req, res, next) => {
 
 app.use(express.static(path.join(__dirname, 'public'), { etag: false, maxAge: 0 }));
 
-server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+    server.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = { app, server, db, io };
