@@ -76,13 +76,16 @@ const db = new sqlite3.Database('./database.sqlite', (err) => {
     }
 });
 
+// Helper for Error Responses
+const sendError = (res, status, message) => res.status(status).json({ error: message });
+
 // Auth Middleware
 const requireAuth = (req, res, next) => {
     const token = req.cookies.jwt;
-    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+    if (!token) return sendError(res, 401, 'Unauthorized' );
 
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
-        if (err) return res.status(401).json({ error: 'Unauthorized' });
+        if (err) return sendError(res, 401, 'Unauthorized' );
         req.user = decoded;
         next();
     });
@@ -93,21 +96,21 @@ app.post('/api/signup', (req, res) => {
     const { name, email, password } = req.body;
     
     if (!name || !email || !password) {
-        return res.status(400).json({ error: 'All fields are required' });
+        return sendError(res, 400, 'All fields are required' );
     }
 
     db.get(`SELECT * FROM users WHERE email = ?`, [email], (err, row) => {
-        if (err) return res.status(500).json({ error: 'Database error' });
-        if (row) return res.status(400).json({ error: 'Email already in use' });
+        if (err) return sendError(res, 500, 'Database error' );
+        if (row) return sendError(res, 400, 'Email already in use' );
 
         bcrypt.hash(password, 10, (err, hash) => {
-            if (err) return res.status(500).json({ error: 'Hashing error' });
+            if (err) return sendError(res, 500, 'Hashing error' );
 
             db.run(`INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)`, [name, email, hash], function(err) {
-                if (err) return res.status(500).json({ error: 'Database error' });
+                if (err) return sendError(res, 500, 'Database error' );
                 
                 const token = jwt.sign({ id: this.lastID, name, email }, JWT_SECRET, { expiresIn: '24h' });
-                res.cookie('jwt', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+                res.cookie('jwt', token, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 24 * 60 * 60 * 1000 });
                 res.json({ message: 'Signup successful' });
             });
         });
@@ -118,19 +121,19 @@ app.post('/api/signin', (req, res) => {
     const { email, password } = req.body;
     
     if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
+        return sendError(res, 400, 'Email and password are required' );
     }
 
     db.get(`SELECT * FROM users WHERE email = ?`, [email], (err, user) => {
-        if (err) return res.status(500).json({ error: 'Database error' });
-        if (!user) return res.status(400).json({ error: 'Invalid email or password' });
+        if (err) return sendError(res, 500, 'Database error' );
+        if (!user) return sendError(res, 400, 'Invalid email or password' );
 
         bcrypt.compare(password, user.password_hash, (err, match) => {
-            if (err) return res.status(500).json({ error: 'Comparison error' });
-            if (!match) return res.status(400).json({ error: 'Invalid email or password' });
+            if (err) return sendError(res, 500, 'Comparison error' );
+            if (!match) return sendError(res, 400, 'Invalid email or password' );
 
             const token = jwt.sign({ id: user.id, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
-            res.cookie('jwt', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+            res.cookie('jwt', token, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 24 * 60 * 60 * 1000 });
             res.json({ message: 'Signin successful' });
         });
     });
@@ -143,14 +146,14 @@ app.post('/api/logout', (req, res) => {
 
 app.get('/api/session', requireAuth, (req, res) => {
     db.get(`SELECT id, name, email, balance FROM users WHERE id = ?`, [req.user.id], (err, user) => {
-        if (err || !user) return res.status(500).json({ error: 'User not found' });
+        if (err || !user) return sendError(res, 500, 'User not found' );
         res.json({ user });
     });
 });
 
 app.get('/api/portfolio', requireAuth, (req, res) => {
     db.all(`SELECT ticker, quantity, average_price FROM portfolio WHERE user_id = ? AND quantity > 0`, [req.user.id], async (err, rows) => {
-        if (err) return res.status(500).json({ error: 'Database error' });
+        if (err) return sendError(res, 500, 'Database error' );
         try {
             // Fetch live prices for all tickers in portfolio
             const tickers = rows.map(r => r.ticker);
@@ -195,7 +198,7 @@ app.get('/api/portfolio', requireAuth, (req, res) => {
             });
             
             db.get(`SELECT balance FROM users WHERE id = ?`, [req.user.id], (err, user) => {
-                if (err || !user) return res.status(500).json({ error: 'User not found' });
+                if (err || !user) return sendError(res, 500, 'User not found' );
                 res.json({
                     availableCash: user.balance,
                     totalPortfolioValue: user.balance + currentValue,
@@ -208,7 +211,7 @@ app.get('/api/portfolio', requireAuth, (req, res) => {
             });
         } catch(e) {
             console.error(e);
-            res.status(500).json({ error: 'Error calculating portfolio' });
+            sendError(res, 500, 'Error calculating portfolio' );
         }
     });
 });
@@ -217,23 +220,23 @@ app.post('/api/trade', requireAuth, async (req, res) => {
     const { ticker, type, quantity } = req.body; // type: 'BUY' or 'SELL'
     const qty = parseInt(quantity, 10);
     if (!ticker || !type || isNaN(qty) || qty <= 0) {
-        return res.status(400).json({ error: 'Invalid trade parameters' });
+        return sendError(res, 400, 'Invalid trade parameters' );
     }
 
     try {
         const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
         const quote = await res.json();
-        if (!quote || !quote.c || quote.c === 0) return res.status(400).json({ error: 'Invalid ticker symbol or no price data' });
+        if (!quote || !quote.c || quote.c === 0) return sendError(res, 400, 'Invalid ticker symbol or no price data' );
         
         const price = quote.c;
         const totalValue = price * qty;
 
         db.serialize(() => {
             db.get(`SELECT balance FROM users WHERE id = ?`, [req.user.id], (err, user) => {
-                if (err || !user) return res.status(500).json({ error: 'User not found' });
+                if (err || !user) return sendError(res, 500, 'User not found' );
 
                 if (type === 'BUY') {
-                    if (user.balance < totalValue) return res.status(400).json({ error: 'Insufficient virtual balance' });
+                    if (user.balance < totalValue) return sendError(res, 400, 'Insufficient virtual balance' );
                     
                     // Deduct balance
                     db.run(`UPDATE users SET balance = balance - ? WHERE id = ?`, [totalValue, req.user.id]);
@@ -250,7 +253,7 @@ app.post('/api/trade', requireAuth, async (req, res) => {
                     });
                 } else if (type === 'SELL') {
                     db.get(`SELECT * FROM portfolio WHERE user_id = ? AND ticker = ?`, [req.user.id, ticker], (err, item) => {
-                        if (err || !item || item.quantity < qty) return res.status(400).json({ error: 'Insufficient quantity to sell' });
+                        if (err || !item || item.quantity < qty) return sendError(res, 400, 'Insufficient quantity to sell' );
                         
                         // Add balance
                         db.run(`UPDATE users SET balance = balance + ? WHERE id = ?`, [totalValue, req.user.id]);
@@ -260,7 +263,7 @@ app.post('/api/trade', requireAuth, async (req, res) => {
                         db.run(`UPDATE portfolio SET quantity = ? WHERE id = ?`, [newQty, item.id]);
                     });
                 } else {
-                    return res.status(400).json({ error: 'Invalid trade type' });
+                    return sendError(res, 400, 'Invalid trade type' );
                 }
 
                 // Record transaction
@@ -270,18 +273,18 @@ app.post('/api/trade', requireAuth, async (req, res) => {
             });
         });
     } catch (err) {
-        res.status(500).json({ error: 'Error executing trade' });
+        sendError(res, 500, 'Error executing trade' );
     }
 });
 
 app.get('/api/stock/search/:query', requireAuth, async (req, res) => {
     try {
-        const fetchRes = await fetch(`https://finnhub.io/api/v1/search?q=${req.params.query}&token=${FINNHUB_API_KEY}`);
+        const fetchRes = await fetch(`https://finnhub.io/api/v1/search?q=${encodeURIComponent(req.params.query)}&token=${FINNHUB_API_KEY}`);
         const result = await fetchRes.json();
         // Map to expected frontend structure
         res.json({ quotes: result.result.map(r => ({ symbol: r.displaySymbol, longname: r.description, quoteType: 'EQUITY' })) });
     } catch (err) {
-        res.status(500).json({ error: 'Error searching' });
+        sendError(res, 500, 'Error searching' );
     }
 });
 
@@ -327,7 +330,7 @@ app.get('/api/stock/quote/:ticker', requireAuth, async (req, res) => {
 
         res.json(mappedQuote);
     } catch (err) {
-        res.status(500).json({ error: 'Error fetching quote' });
+        sendError(res, 500, 'Error fetching quote' );
     }
 });
 
@@ -379,7 +382,7 @@ app.get('/api/stock/history/:ticker/:range', requireAuth, async (req, res) => {
         res.json(chartData);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Error fetching historical data' });
+        sendError(res, 500, 'Error fetching historical data' );
     }
 });
 
@@ -439,17 +442,17 @@ cron.schedule('*/10 * * * * *', async () => {
 // Watchlist API Endpoints
 app.get('/api/watchlist', requireAuth, (req, res) => {
     db.all(`SELECT ticker FROM watchlist WHERE user_id = ?`, [req.user.id], (err, rows) => {
-        if (err) return res.status(500).json({ error: 'Database error' });
+        if (err) return sendError(res, 500, 'Database error' );
         res.json(rows.map(r => r.ticker));
     });
 });
 
 app.post('/api/watchlist', requireAuth, (req, res) => {
     const { ticker } = req.body;
-    if (!ticker) return res.status(400).json({ error: 'Ticker is required' });
+    if (!ticker) return sendError(res, 400, 'Ticker is required' );
     
     db.run(`INSERT OR IGNORE INTO watchlist (user_id, ticker) VALUES (?, ?)`, [req.user.id, ticker], function(err) {
-        if (err) return res.status(500).json({ error: 'Database error' });
+        if (err) return sendError(res, 500, 'Database error' );
         globalWatchlist.add(ticker);
         res.json({ message: 'Added to watchlist' });
     });
@@ -458,14 +461,13 @@ app.post('/api/watchlist', requireAuth, (req, res) => {
 app.delete('/api/watchlist/:ticker', requireAuth, (req, res) => {
     const ticker = req.params.ticker;
     db.run(`DELETE FROM watchlist WHERE user_id = ? AND ticker = ?`, [req.user.id, ticker], function(err) {
-        if (err) return res.status(500).json({ error: 'Database error' });
+        if (err) return sendError(res, 500, 'Database error' );
         res.json({ message: 'Removed from watchlist' });
     });
 });
 
 
 io.on('connection', (socket) => {
-    console.log('A client connected for real-time updates');
 });
 
 // Static files and protected routes
