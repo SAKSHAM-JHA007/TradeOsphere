@@ -231,17 +231,12 @@ app.post('/api/trade', requireAuth, async (req, res) => {
         const price = quote.c;
         const totalValue = price * qty;
 
-        db.serialize(() => {
-            db.get(`SELECT balance FROM users WHERE id = ?`, [req.user.id], (err, user) => {
-                if (err || !user) return sendError(res, 500, 'User not found' );
+        if (type === 'BUY') {
+            db.run(`UPDATE users SET balance = balance - ? WHERE id = ? AND balance >= ?`, [totalValue, req.user.id, totalValue], function(err) {
+                if (err) return sendError(res, 500, 'Database error' );
+                if (this.changes === 0) return sendError(res, 400, 'Insufficient virtual balance' );
 
-                if (type === 'BUY') {
-                    if (user.balance < totalValue) return sendError(res, 400, 'Insufficient virtual balance' );
-                    
-                    // Deduct balance
-                    db.run(`UPDATE users SET balance = balance - ? WHERE id = ?`, [totalValue, req.user.id]);
-                    
-                    // Update portfolio
+                db.serialize(() => {
                     db.get(`SELECT * FROM portfolio WHERE user_id = ? AND ticker = ?`, [req.user.id, ticker], (err, item) => {
                         if (item) {
                             const newQty = item.quantity + qty;
@@ -251,27 +246,27 @@ app.post('/api/trade', requireAuth, async (req, res) => {
                             db.run(`INSERT INTO portfolio (user_id, ticker, quantity, average_price) VALUES (?, ?, ?, ?)`, [req.user.id, ticker, qty, price]);
                         }
                     });
-                } else if (type === 'SELL') {
-                    db.get(`SELECT * FROM portfolio WHERE user_id = ? AND ticker = ?`, [req.user.id, ticker], (err, item) => {
-                        if (err || !item || item.quantity < qty) return sendError(res, 400, 'Insufficient quantity to sell' );
-                        
-                        // Add balance
-                        db.run(`UPDATE users SET balance = balance + ? WHERE id = ?`, [totalValue, req.user.id]);
-                        
-                        // Update portfolio
-                        const newQty = item.quantity - qty;
-                        db.run(`UPDATE portfolio SET quantity = ? WHERE id = ?`, [newQty, item.id]);
-                    });
-                } else {
-                    return sendError(res, 400, 'Invalid trade type' );
-                }
 
-                // Record transaction
-                db.run(`INSERT INTO transactions (user_id, ticker, type, quantity, price) VALUES (?, ?, ?, ?, ?)`, [req.user.id, ticker, type, qty, price]);
-                
-                res.json({ message: 'Trade executed successfully', price, totalValue });
+                    db.run(`INSERT INTO transactions (user_id, ticker, type, quantity, price) VALUES (?, ?, ?, ?, ?)`, [req.user.id, ticker, type, qty, price], function(err) {
+                        res.json({ message: 'Trade executed successfully', price, totalValue });
+                    });
+                });
             });
-        });
+        } else if (type === 'SELL') {
+            db.run(`UPDATE portfolio SET quantity = quantity - ? WHERE user_id = ? AND ticker = ? AND quantity >= ?`, [qty, req.user.id, ticker, qty], function(err) {
+                if (err) return sendError(res, 500, 'Database error' );
+                if (this.changes === 0) return sendError(res, 400, 'Insufficient quantity to sell' );
+                
+                db.serialize(() => {
+                    db.run(`UPDATE users SET balance = balance + ? WHERE id = ?`, [totalValue, req.user.id]);
+                    db.run(`INSERT INTO transactions (user_id, ticker, type, quantity, price) VALUES (?, ?, ?, ?, ?)`, [req.user.id, ticker, type, qty, price], function(err) {
+                        res.json({ message: 'Trade executed successfully', price, totalValue });
+                    });
+                });
+            });
+        } else {
+            return sendError(res, 400, 'Invalid trade type' );
+        }
     } catch (err) {
         sendError(res, 500, 'Error executing trade' );
     }
