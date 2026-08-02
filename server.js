@@ -370,14 +370,19 @@ app.get('/api/stock/history/:ticker/:range', requireAuth, async (req, res) => {
         
         if (!result.quotes || result.quotes.length === 0) return res.json([]);
         
-        const chartData = result.quotes.map(q => ({
-            time: interval.endsWith('m') ? Math.floor(new Date(q.date).getTime() / 1000) : new Date(q.date).toISOString().split('T')[0],
-            open: q.open,
-            high: q.high,
-            low: q.low,
-            close: q.close,
-            value: q.close
-        })).filter(q => q.close !== null);
+        const chartData = result.quotes.reduce((acc, q) => {
+            if (q.close !== null) {
+                acc.push({
+                    time: interval.endsWith('m') ? Math.floor(new Date(q.date).getTime() / 1000) : new Date(q.date).toISOString().split('T')[0],
+                    open: q.open,
+                    high: q.high,
+                    low: q.low,
+                    close: q.close,
+                    value: q.close
+                });
+            }
+            return acc;
+        }, []);
         
         res.json(chartData);
     } catch (err) {
