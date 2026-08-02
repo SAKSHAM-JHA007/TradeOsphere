@@ -110,7 +110,7 @@ app.post('/api/signup', (req, res) => {
                 if (err) return sendError(res, 500, 'Database error' );
                 
                 const token = jwt.sign({ id: this.lastID, name, email }, JWT_SECRET, { expiresIn: '24h' });
-                res.cookie('jwt', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+                res.cookie('jwt', token, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 24 * 60 * 60 * 1000 });
                 res.json({ message: 'Signup successful' });
             });
         });
@@ -133,7 +133,7 @@ app.post('/api/signin', (req, res) => {
             if (!match) return sendError(res, 400, 'Invalid email or password' );
 
             const token = jwt.sign({ id: user.id, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
-            res.cookie('jwt', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+            res.cookie('jwt', token, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 24 * 60 * 60 * 1000 });
             res.json({ message: 'Signin successful' });
         });
     });
