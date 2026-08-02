@@ -167,7 +167,10 @@ app.get('/api/portfolio', requireAuth, (req, res) => {
                     } catch(e) { return null; }
                 }));
             }
-            const quoteMap = quotes.filter(q => q).reduce((acc, q) => ({ ...acc, [q.symbol]: q }), {});
+            const quoteMap = quotes.filter(q => q).reduce((acc, q) => {
+                acc[q.symbol] = q;
+                return acc;
+            }, {});
             
             let totalInvested = 0;
             let currentValue = 0;
