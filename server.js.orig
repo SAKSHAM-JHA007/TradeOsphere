@@ -94,7 +94,7 @@ const requireAuth = (req, res, next) => {
 // API Routes
 app.post('/api/signup', (req, res) => {
     const { name, email, password } = req.body;
-    
+
     if (!name || !email || !password) {
         return sendError(res, 400, 'All fields are required' );
     }
@@ -108,7 +108,7 @@ app.post('/api/signup', (req, res) => {
 
             db.run(`INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)`, [name, email, hash], function(err) {
                 if (err) return sendError(res, 500, 'Database error' );
-                
+
                 const token = jwt.sign({ id: this.lastID, name, email }, JWT_SECRET, { expiresIn: '24h' });
                 res.cookie('jwt', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
                 res.json({ message: 'Signup successful' });
@@ -119,7 +119,7 @@ app.post('/api/signup', (req, res) => {
 
 app.post('/api/signin', (req, res) => {
     const { email, password } = req.body;
-    
+
     if (!email || !password) {
         return sendError(res, 400, 'Email and password are required' );
     }
@@ -168,24 +168,24 @@ app.get('/api/portfolio', requireAuth, (req, res) => {
                 }));
             }
             const quoteMap = quotes.filter(q => q).reduce((acc, q) => ({ ...acc, [q.symbol]: q }), {});
-            
+
             let totalInvested = 0;
             let currentValue = 0;
             let todaysChange = 0;
-            
+
             const holdings = rows.map(r => {
                 const q = quoteMap[r.ticker];
                 const price = q ? q.regularMarketPrice : r.average_price;
                 const prevClose = q ? q.regularMarketPreviousClose : r.average_price;
-                
+
                 const invested = r.quantity * r.average_price;
                 const current = r.quantity * price;
                 const today = r.quantity * (price - prevClose);
-                
+
                 totalInvested += invested;
                 currentValue += current;
                 todaysChange += today;
-                
+
                 return {
                     ticker: r.ticker,
                     quantity: r.quantity,
@@ -196,7 +196,7 @@ app.get('/api/portfolio', requireAuth, (req, res) => {
                     profitLoss: current - invested
                 };
             });
-            
+
             db.get(`SELECT balance FROM users WHERE id = ?`, [req.user.id], (err, user) => {
                 if (err || !user) return sendError(res, 500, 'User not found' );
                 res.json({
@@ -227,7 +227,7 @@ app.post('/api/trade', requireAuth, async (req, res) => {
         const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
         const quote = await res.json();
         if (!quote || !quote.c || quote.c === 0) return sendError(res, 400, 'Invalid ticker symbol or no price data' );
-        
+
         const price = quote.c;
         const totalValue = price * qty;
 
@@ -237,10 +237,10 @@ app.post('/api/trade', requireAuth, async (req, res) => {
 
                 if (type === 'BUY') {
                     if (user.balance < totalValue) return sendError(res, 400, 'Insufficient virtual balance' );
-                    
+
                     // Deduct balance
                     db.run(`UPDATE users SET balance = balance - ? WHERE id = ?`, [totalValue, req.user.id]);
-                    
+
                     // Update portfolio
                     db.get(`SELECT * FROM portfolio WHERE user_id = ? AND ticker = ?`, [req.user.id, ticker], (err, item) => {
                         if (item) {
@@ -254,10 +254,10 @@ app.post('/api/trade', requireAuth, async (req, res) => {
                 } else if (type === 'SELL') {
                     db.get(`SELECT * FROM portfolio WHERE user_id = ? AND ticker = ?`, [req.user.id, ticker], (err, item) => {
                         if (err || !item || item.quantity < qty) return sendError(res, 400, 'Insufficient quantity to sell' );
-                        
+
                         // Add balance
                         db.run(`UPDATE users SET balance = balance + ? WHERE id = ?`, [totalValue, req.user.id]);
-                        
+
                         // Update portfolio
                         const newQty = item.quantity - qty;
                         db.run(`UPDATE portfolio SET quantity = ? WHERE id = ?`, [newQty, item.id]);
@@ -268,7 +268,7 @@ app.post('/api/trade', requireAuth, async (req, res) => {
 
                 // Record transaction
                 db.run(`INSERT INTO transactions (user_id, ticker, type, quantity, price) VALUES (?, ?, ?, ?, ?)`, [req.user.id, ticker, type, qty, price]);
-                
+
                 res.json({ message: 'Trade executed successfully', price, totalValue });
             });
         });
@@ -307,7 +307,7 @@ app.get('/api/stock/quote/:ticker', requireAuth, async (req, res) => {
             fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`).then(r => r.json()),
             fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${FINNHUB_API_KEY}`).then(r => r.json())
         ]);
-        
+
         const mappedQuote = {
             symbol: ticker,
             regularMarketPrice: quoteRes.c,
@@ -339,7 +339,7 @@ app.get('/api/stock/history/:ticker/:range', requireAuth, async (req, res) => {
         const { ticker, range } = req.params;
         let period1, interval;
         const now = new Date();
-        
+
         if (range === '1D') {
             period1 = new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000);
             interval = '5m';
@@ -367,9 +367,9 @@ app.get('/api/stock/history/:ticker/:range', requireAuth, async (req, res) => {
         }
 
         const result = await yahooFinance.chart(ticker, { period1, interval });
-        
+
         if (!result.quotes || result.quotes.length === 0) return res.json([]);
-        
+
         const chartData = result.quotes.map(q => ({
             time: interval.endsWith('m') ? Math.floor(new Date(q.date).getTime() / 1000) : new Date(q.date).toISOString().split('T')[0],
             open: q.open,
@@ -378,7 +378,7 @@ app.get('/api/stock/history/:ticker/:range', requireAuth, async (req, res) => {
             close: q.close,
             value: q.close
         })).filter(q => q.close !== null);
-        
+
         res.json(chartData);
     } catch (err) {
         console.error(err);
@@ -450,7 +450,7 @@ app.get('/api/watchlist', requireAuth, (req, res) => {
 app.post('/api/watchlist', requireAuth, (req, res) => {
     const { ticker } = req.body;
     if (!ticker) return sendError(res, 400, 'Ticker is required' );
-    
+
     db.run(`INSERT OR IGNORE INTO watchlist (user_id, ticker) VALUES (?, ?)`, [req.user.id, ticker], function(err) {
         if (err) return sendError(res, 500, 'Database error' );
         globalWatchlist.add(ticker);
@@ -487,5 +487,3 @@ app.use(express.static(path.join(__dirname, 'public'), { etag: false, maxAge: 0 
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
-
-module.exports = { app, server, db };

@@ -1,0 +1,10 @@
+--- server.test.js
++++ server.test.js
+@@ -1,4 +1,7 @@
+ const request = require('supertest');
++
++process.env.JWT_SECRET = 'test_secret';
++
+ const { app, server, db } = require('./server');
+
+ jest.mock('node-cron', () => ({
