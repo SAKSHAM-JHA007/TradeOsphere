@@ -79,6 +79,17 @@ const db = new sqlite3.Database('./database.sqlite', (err) => {
 // Helper for Error Responses
 const sendError = (res, status, message) => res.status(status).json({ error: message });
 
+// Helper to fetch Finnhub quote
+const fetchFinnhubQuote = async (symbol) => {
+    try {
+        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`);
+        if (!res.ok) return null;
+        return await res.json();
+    } catch (e) {
+        return null;
+    }
+};
+
 // Auth Middleware
 const requireAuth = (req, res, next) => {
     const token = req.cookies.jwt;
@@ -160,11 +171,9 @@ app.get('/api/portfolio', requireAuth, (req, res) => {
             let quotes = [];
             if (tickers.length > 0) {
                 quotes = await Promise.all(tickers.map(async t => {
-                    try {
-                        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${FINNHUB_API_KEY}`);
-                        const data = await res.json();
-                        return { symbol: t, regularMarketPrice: data.c, regularMarketPreviousClose: data.pc, regularMarketChangePercent: data.dp };
-                    } catch(e) { return null; }
+                    const data = await fetchFinnhubQuote(t);
+                    if (!data) return null;
+                    return { symbol: t, regularMarketPrice: data.c, regularMarketPreviousClose: data.pc, regularMarketChangePercent: data.dp };
                 }));
             }
             const quoteMap = quotes.filter(q => q).reduce((acc, q) => ({ ...acc, [q.symbol]: q }), {});
@@ -224,8 +233,7 @@ app.post('/api/trade', requireAuth, async (req, res) => {
     }
 
     try {
-        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
-        const quote = await res.json();
+        const quote = await fetchFinnhubQuote(ticker);
         if (!quote || !quote.c || quote.c === 0) return sendError(res, 400, 'Invalid ticker symbol or no price data' );
         
         const price = quote.c;
@@ -304,10 +312,12 @@ app.get('/api/stock/quote/:ticker', requireAuth, async (req, res) => {
         }
 
         const [quoteRes, profileRes] = await Promise.all([
-            fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`).then(r => r.json()),
+            fetchFinnhubQuote(ticker),
             fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${FINNHUB_API_KEY}`).then(r => r.json())
         ]);
         
+        if (!quoteRes) throw new Error('Quote fetch failed');
+
         const mappedQuote = {
             symbol: ticker,
             regularMarketPrice: quoteRes.c,
@@ -417,17 +427,14 @@ cron.schedule('*/10 * * * * *', async () => {
         }
 
         const quotes = await Promise.all(tickersToFetch.map(async ticker => {
-            try {
-                const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
-                if (!res.ok) return null; // Avoid crashing on 429 or other errors
-                const data = await res.json();
-                return {
-                    symbol: ticker,
-                    price: data.c,
-                    change: data.d,
-                    changePercent: data.dp
-                };
-            } catch(e) { return null; }
+            const data = await fetchFinnhubQuote(ticker);
+            if (!data) return null;
+            return {
+                symbol: ticker,
+                price: data.c,
+                change: data.d,
+                changePercent: data.dp
+            };
         }));
 
         const marketData = quotes.filter(q => q && q.price && q.price !== 0);
