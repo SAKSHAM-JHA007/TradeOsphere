@@ -623,20 +623,43 @@
                     if (res.ok && data.quotes && data.quotes.length > 0) {
                         const equityResults = data.quotes.filter(q => q.quoteType === 'EQUITY' || q.quoteType === 'INDEX');
                         if (equityResults.length > 0) {
-                            resultContainer.innerHTML = equityResults.slice(0, 5).map(q => `
-                                <div class="flex justify-between items-center p-3 hover:bg-surface-variant/30 cursor-pointer rounded-lg transition-colors" onclick="openStockDetails('${q.symbol}')">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded bg-surface-container flex justify-center items-center font-bold text-xs text-primary">
-                                            ${q.symbol.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <div class="font-bold text-on-surface">${q.symbol}</div>
-                                            <div class="text-xs text-on-surface-variant line-clamp-1">${q.longname || q.shortname || 'Equity'}</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-primary text-xs font-bold px-2 py-1 bg-primary/10 rounded">Trade</div>
-                                </div>
-                            `).join('');
+                            resultContainer.textContent = '';
+                            equityResults.slice(0, 5).forEach(q => {
+                                const row = document.createElement('div');
+                                row.className = 'flex justify-between items-center p-3 hover:bg-surface-variant/30 cursor-pointer rounded-lg transition-colors';
+                                row.onclick = () => openStockDetails(q.symbol);
+
+                                const leftSide = document.createElement('div');
+                                leftSide.className = 'flex items-center gap-3';
+
+                                const iconDiv = document.createElement('div');
+                                iconDiv.className = 'w-8 h-8 rounded bg-surface-container flex justify-center items-center font-bold text-xs text-primary';
+                                iconDiv.textContent = q.symbol.charAt(0);
+
+                                const textDiv = document.createElement('div');
+
+                                const symbolDiv = document.createElement('div');
+                                symbolDiv.className = 'font-bold text-on-surface';
+                                symbolDiv.textContent = q.symbol;
+
+                                const nameDiv = document.createElement('div');
+                                nameDiv.className = 'text-xs text-on-surface-variant line-clamp-1';
+                                nameDiv.textContent = q.longname || q.shortname || 'Equity';
+
+                                textDiv.appendChild(symbolDiv);
+                                textDiv.appendChild(nameDiv);
+                                leftSide.appendChild(iconDiv);
+                                leftSide.appendChild(textDiv);
+
+                                const rightSide = document.createElement('div');
+                                rightSide.className = 'text-primary text-xs font-bold px-2 py-1 bg-primary/10 rounded';
+                                rightSide.textContent = 'Trade';
+
+                                row.appendChild(leftSide);
+                                row.appendChild(rightSide);
+
+                                resultContainer.appendChild(row);
+                            });
                             resultContainer.classList.remove('hidden');
                         } else {
                             resultContainer.innerHTML = `<div class="p-4 text-center text-sm text-on-surface-variant">No stocks found.</div>`;
