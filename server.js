@@ -80,6 +80,26 @@ const db = new sqlite3.Database(dbPath, (err) => {
 // Helper for Error Responses
 const sendError = (res, status, message) => res.status(status).json({ error: message });
 
+// Helper for History Chart Parameters
+const getChartParameters = (range) => {
+    const now = new Date();
+    const map = {
+        '1D': { days: 4, interval: '5m' },
+        '5D': { days: 7, interval: '15m' },
+        '1M': { days: 30, interval: '1d' },
+        '3M': { days: 90, interval: '1d' },
+        '6M': { days: 180, interval: '1d' },
+        '1Y': { days: 365, interval: '1d' },
+        '5Y': { days: 5 * 365, interval: '1wk' }
+    };
+
+    const config = map[range] || { days: 30, interval: '1d' };
+    return {
+        period1: new Date(now.getTime() - config.days * 24 * 60 * 60 * 1000),
+        interval: config.interval
+    };
+};
+
 // Auth Middleware
 const requireAuth = (req, res, next) => {
     const token = req.cookies.jwt;
@@ -377,34 +397,7 @@ app.get('/api/stock/quote/:ticker', requireAuth, async (req, res) => {
 app.get('/api/stock/history/:ticker/:range', requireAuth, async (req, res) => {
     try {
         const { ticker, range } = req.params;
-        let period1, interval;
-        const now = new Date();
-        
-        if (range === '1D') {
-            period1 = new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000);
-            interval = '5m';
-        } else if (range === '5D') {
-            period1 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            interval = '15m';
-        } else if (range === '1M') {
-            period1 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            interval = '1d';
-        } else if (range === '3M') {
-            period1 = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-            interval = '1d';
-        } else if (range === '6M') {
-            period1 = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
-            interval = '1d';
-        } else if (range === '1Y') {
-            period1 = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-            interval = '1d';
-        } else if (range === '5Y') {
-            period1 = new Date(now.getTime() - 5 * 365 * 24 * 60 * 60 * 1000);
-            interval = '1wk';
-        } else {
-            period1 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            interval = '1d';
-        }
+        const { period1, interval } = getChartParameters(range);
 
         const result = await yahooFinance.chart(ticker, { period1, interval });
         
