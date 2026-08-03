@@ -160,11 +160,52 @@ app.get('/api/portfolio', requireAuth, (req, res) => {
             const tickers = rows.map(r => r.ticker);
             let quotes = [];
             if (tickers.length > 0) {
+                const now = Date.now();
                 quotes = await Promise.all(tickers.map(async t => {
                     try {
-                        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${FINNHUB_API_KEY}`);
-                        const data = await res.json();
-                        return { symbol: t, regularMarketPrice: data.c, regularMarketPreviousClose: data.pc, regularMarketChangePercent: data.dp };
+                        if (quoteCache.has(t)) {
+                            const cached = quoteCache.get(t);
+                            if (now - cached.timestamp < QUOTE_CACHE_TTL) {
+                                return {
+                                    symbol: t,
+                                    regularMarketPrice: cached.data.regularMarketPrice,
+                                    regularMarketPreviousClose: cached.data.regularMarketPreviousClose,
+                                    regularMarketChangePercent: cached.data.regularMarketChangePercent
+                                };
+                            }
+                        }
+
+                        const [quoteRes, profileRes] = await Promise.all([
+                            fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${FINNHUB_API_KEY}`).then(r => r.json()),
+                            fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${t}&token=${FINNHUB_API_KEY}`).then(r => r.json())
+                        ]);
+
+                        const mappedQuote = {
+                            symbol: t,
+                            regularMarketPrice: quoteRes.c,
+                            regularMarketChange: quoteRes.d,
+                            regularMarketChangePercent: quoteRes.dp,
+                            regularMarketOpen: quoteRes.o,
+                            regularMarketDayHigh: quoteRes.h,
+                            regularMarketDayLow: quoteRes.l,
+                            regularMarketPreviousClose: quoteRes.pc,
+                            longName: profileRes.name || t,
+                            sector: profileRes.finnhubIndustry || 'Equities',
+                            marketCap: profileRes.marketCapitalization ? profileRes.marketCapitalization * 1000000 : null,
+                            regularMarketVolume: null // Finnhub quote doesn't return volume in standard tier easily, keep null
+                        };
+
+                        quoteCache.set(t, {
+                            data: mappedQuote,
+                            timestamp: now
+                        });
+
+                        return {
+                            symbol: t,
+                            regularMarketPrice: quoteRes.c,
+                            regularMarketPreviousClose: quoteRes.pc,
+                            regularMarketChangePercent: quoteRes.dp
+                        };
                     } catch(e) { return null; }
                 }));
             }
@@ -281,6 +322,9 @@ app.post('/api/trade', requireAuth, async (req, res) => {
     }
 });
 
+const quoteCache = new Map();
+const QUOTE_CACHE_TTL = 60000; // 60 seconds
+
 app.get('/api/stock/search/:query', requireAuth, async (req, res) => {
     try {
         const fetchRes = await fetch(`https://finnhub.io/api/v1/search?q=${encodeURIComponent(req.params.query)}&token=${FINNHUB_API_KEY}`);
@@ -291,9 +335,6 @@ app.get('/api/stock/search/:query', requireAuth, async (req, res) => {
         sendError(res, 500, 'Error searching' );
     }
 });
-
-const quoteCache = new Map();
-const QUOTE_CACHE_TTL = 60000; // 60 seconds
 
 app.get('/api/stock/quote/:ticker', requireAuth, async (req, res) => {
     try {
