@@ -1,7 +1,12 @@
 const jwt = require('jsonwebtoken');
 const http = require('http');
+require('dotenv').config();
 
-const JWT_SECRET = 'fallback-secret-key-do-not-use-in-production';
+if (!process.env.JWT_SECRET) {
+    console.error('FATAL ERROR: JWT_SECRET is not defined.');
+    process.exit(1);
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 const token = jwt.sign({ id: 1, email: 'test@test.com' }, JWT_SECRET);
 
 const options = {
